@@ -1,4 +1,4 @@
 import { Tabs } from 'expo-router';
 import { Text } from 'react-native';
 import { colors } from '../../src/ui';
-export default function TabsLayout(){return <Tabs screenOptions={{tabBarActiveTintColor:colors.harbor,headerStyle:{backgroundColor:colors.paper},headerTitleStyle:{color:colors.ink},tabBarStyle:{backgroundColor:'white'}}}>{[['index','Home','⌂'],['shows','Shows','♫'],['calendar','My calendar','▦']].map(([name,title,icon])=><Tabs.Screen key={name} name={name} options={{title,tabBarIcon:({color})=><Text style={{fontSize:24,color}}>{icon}</Text>}}/>)}</Tabs>}
+export default function TabsLayout(){return <Tabs screenOptions={{tabBarActiveTintColor:colors.harbor,headerStyle:{backgroundColor:colors.paper},headerTitleStyle:{color:colors.ink},tabBarStyle:{backgroundColor:'white'}}}>{[['index','Home','⌂'],['shows','Shows','♫'],['calendar','My calendar','▦'],['uva','UVA','⚑']].map(([name,title,icon])=><Tabs.Screen key={name} name={name} options={{title,tabBarIcon:({color})=><Text style={{fontSize:24,color}}>{icon}</Text>}}/>)}</Tabs>}

@@ -1,4 +1,5 @@
 import type { Concert } from './reused/concert';
+import { parseUvaGames, type UvaGame } from './uva';
 export const BASE=(process.env.EXPO_PUBLIC_API_BASE_URL || 'https://www.mikewilley.app').replace(/\/$/,'');
 export async function getConcerts(region:'Richmond'|'Hampton Roads'|'Washington DC'):Promise<Concert[]> {
  const coords={'Richmond':'lat=37.5407&lon=-77.4360','Hampton Roads':'lat=36.8508&lon=-76.2859','Washington DC':'lat=38.9072&lon=-77.0369'};
@@ -7,4 +8,21 @@ export async function getConcerts(region:'Richmond'|'Hampton Roads'|'Washington 
  const body=await response.json();
  if(body.ok!==true||!Array.isArray(body.events)) throw new Error(body.error || 'The concert feed is unavailable.');
  return Array.from(new Map<string,Concert>((body.events as Concert[]).filter(e=>typeof e.id==='string'&&typeof e.name==='string'&&Number.isFinite(Date.parse(e.dateTime))&&Date.parse(e.dateTime)>=Date.now()).map(e=>[e.id,e])).values()).sort((a,b)=>a.dateTime.localeCompare(b.dateTime));
+}
+
+async function getUvaFeed(path:string):Promise<UvaGame[]> {
+ const response=await fetch(`${BASE}${path}`,{signal:AbortSignal.timeout(20000)});
+ if(!response.ok) throw new Error('UVA schedule could not load. Try again in a moment.');
+ const body=await response.json();
+ if(body && body.ok===false) throw new Error(typeof body.error==='string'&&body.error?body.error:'The UVA schedule is unavailable.');
+ return parseUvaGames(body);
+}
+
+export async function getUvaSchedule():Promise<{football:UvaGame[];basketball:UvaGame[]}> {
+ const [football,basketball]=await Promise.allSettled([getUvaFeed('/api/uva/football'),getUvaFeed('/api/uva')]);
+ if(football.status==='rejected'&&basketball.status==='rejected') throw new Error('UVA schedule could not load. Try again in a moment.');
+ return {
+  football:football.status==='fulfilled'?football.value:[],
+  basketball:basketball.status==='fulfilled'?basketball.value:[],
+ };
 }
