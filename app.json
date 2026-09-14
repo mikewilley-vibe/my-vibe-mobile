@@ -10,8 +10,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "app.mikewilley.myvibemobile",
       "infoPlist": {
-        "NSCalendarsFullAccessUsageDescription": "My Vibe checks saved events to prevent duplicates and adds only the plans you choose.",
-        "NSCalendarsUsageDescription": "My Vibe adds the plans you choose to your calendar.",
+        "NSCalendarsFullAccessUsageDescription": "My Vibe can show Google calendar events on this device and adds only the plans you choose.",
+        "NSCalendarsUsageDescription": "My Vibe can show Google calendar events on this device and adds only the plans you choose.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -36,7 +36,7 @@
       [
         "expo-calendar",
         {
-          "calendarPermission": "My Vibe checks saved events to prevent duplicates and adds only the plans you choose."
+          "calendarPermission": "My Vibe can show Google calendar events on this device and adds only the plans you choose."
         }
       ],
       "@react-native-community/datetimepicker",
