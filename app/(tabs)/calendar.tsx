@@ -1,4 +1,4 @@
-import { useCallback,useState } from 'react';
+import { createElement,useCallback,useState } from 'react';
 import { ActivityIndicator,Alert,Linking,Platform,Pressable,Text,View } from 'react-native';
 import { router,useFocusEffect } from 'expo-router';
 import { WebView } from 'react-native-webview';
@@ -9,6 +9,13 @@ import { Page,Card,Button,styles,colors,when,problem } from '../../src/ui';
 
 const dayKey=(d:Date)=>`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 const embedSrc=(()=>{const resolved=resolveGoogleCalendarEmbedUrl(process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_EMBED_URL);return resolved?agendaEmbedUrl(resolved):null})();
+
+function AgendaEmbed({src,reloadKey}:{src:string;reloadKey:number}){
+ if(Platform.OS==='web'){
+  return createElement('iframe',{key:reloadKey,title:'Google Calendar agenda',src,style:{border:0,width:'100%',height:560},referrerPolicy:'no-referrer-when-downgrade'});
+ }
+ return <WebView key={reloadKey} accessibilityLabel="Google Calendar agenda" source={{uri:src}} style={{flex:1,backgroundColor:'white'}} startInLoadingState nestedScrollEnabled javaScriptEnabled renderLoading={()=><ActivityIndicator accessibilityLabel="Loading Google Calendar" color={colors.harbor} style={{marginTop:40}}/>}/>;
+}
 
 export default function MyCalendar(){
  const {plans,links}=useData();
@@ -65,7 +72,7 @@ export default function MyCalendar(){
    <Text style={styles.heading}>Family calendar</Text>
    <Text style={styles.body}>Public events from Google Calendar. Your saved My Vibe plans still appear on the Month view.</Text>
    <View style={{height:560,overflow:'hidden',borderRadius:16,borderWidth:1,borderColor:colors.fog,backgroundColor:'white'}}>
-    <WebView key={embedNonce} accessibilityLabel="Google Calendar agenda" source={{uri:embedSrc}} style={{flex:1,backgroundColor:'white'}} startInLoadingState nestedScrollEnabled javaScriptEnabled renderLoading={()=><ActivityIndicator accessibilityLabel="Loading Google Calendar" color={colors.harbor} style={{marginTop:40}}/>}/>
+    <AgendaEmbed src={embedSrc} reloadKey={embedNonce}/>
    </View>
   </Card>}
   {view==='month'&&<>
@@ -88,6 +95,7 @@ export default function MyCalendar(){
     {selected&&<Button title="Show whole month" onPress={()=>setSelected(null)}/>}
    </Card>
    {access==='denied'&&<Card><Text style={styles.body}>Allow Calendar access in Settings to also see Google events here. Your saved My Vibe plans still show below.</Text><Button title="Calendar permission settings" onPress={()=>void Linking.openSettings().catch(problem)}/></Card>}
+   {access==='unavailable'&&<Text style={styles.body}>On iPhone or Android, this month also shows events from Google calendars on your device.</Text>}
    {access==='granted'&&!hasGoogleCalendar&&Platform.OS!=='web'&&<Card><Text style={styles.body}>{GOOGLE_CALENDAR_SETUP_HINT}</Text></Card>}
    {!!googleError&&<Card><Text style={styles.body}>{googleError}</Text><Button title="Try Google events again" onPress={()=>void loadGoogle()}/></Card>}
    {items.length?items.map(item=>item.kind==='plan'
