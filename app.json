@@ -19,7 +19,9 @@
       "package": "app.mikewilley.myvibemobile",
       "permissions": [
         "READ_CALENDAR",
-        "WRITE_CALENDAR"
+        "WRITE_CALENDAR",
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR"
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -55,6 +57,13 @@
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#F7F4EF"
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f97907f3-96ef-4ac5-a434-6d7d66a14beb"
+      }
+    },
+    "owner": "mikewilley"
   }
 }
