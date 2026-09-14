@@ -28,8 +28,8 @@ Xcode is installed on this Mac. This Codex session could not connect to CoreSimu
 - **Home:** native My Vibe branding, upcoming saved plans, Shows, and remaining personal shortcuts (HIIT Timer, family calendar & school links).
 - **UVA:** native football and basketball upcoming games from the existing `/api/uva/football` and `/api/uva` feeds (next up, next five per sport, HOME/AWAY).
 - **Shows:** real upcoming concerts from the existing `/api/concerts/local` endpoint; Hampton Roads, Richmond, and DC filters; original venue list; ticket links; save a show as a plan.
-- **My calendar:** month grid, day selection, saved-plan agenda, custom plans, editing and removal.
-- **Plan details:** title, native date/time pickers, location and notes; separate local save and device-calendar export; writable calendar selection; permissions/settings handling; verified “In Calendar” state.
+- **My calendar:** month grid with saved My Vibe plans and Google events from calendars already on the device; day selection; Agenda WebView of the public Google Calendar embed; custom plans, editing and removal.
+- **Plan details:** title, native date/time pickers, location and notes; separate local save and device-calendar export; **Add to Calendar** with Google calendars listed first; permissions/settings handling; verified “In Calendar” state.
 
 Concert end times default to two hours and are explicitly presented for review. Dates retain an absolute instant and display in the device time zone. Date-only archived shows were not imported as timed events or presented as upcoming.
 
@@ -45,7 +45,9 @@ A future shared-save phase should first add Supabase Auth and a user-owned plans
 
 ## Calendar behavior and limits
 
-Selecting a writable calendar confirms creation. My Vibe saves the plan first, requests access only for export, writes title/start/end/location/notes and a source link, and stores the resulting native event ID. Concurrent taps share one operation. Before another write, it checks that ID; it also searches all readable calendars around the plan dates for a stable source marker, recovering from a failed local write after event creation. Explicit event-not-found errors allow re-adding; unknown read failures fail closed.
+Selecting a writable calendar confirms creation. Google-sourced device calendars (detected from `source.name` / `source.type` and common Gmail/Google patterns) are listed first and labeled clearly; other calendars remain available below. My Vibe saves the plan first, requests access for export and for reading Google events on the My calendar tab, writes title/start/end/location/notes and a source link, and stores the resulting native event ID. Concurrent taps share one operation. Before another write, it checks that ID; it also searches all readable calendars around the plan dates for a stable source marker, recovering from a failed local write after event creation. Explicit event-not-found errors allow re-adding; unknown read failures fail closed.
+
+The My calendar tab also loads events from Google-sourced device calendars for the visible month via `expo-calendar` (no Google OAuth or Calendar API). If calendar permission is denied, saved My Vibe plans still show. An in-app Agenda WebView uses the public `calendar.google.com/.../calendar/embed` URL (override with `EXPO_PUBLIC_GOOGLE_CALENDAR_EMBED_URL`; see `.env.example`).
 
 Status is rechecked when the detail screen opens and when the app returns to the foreground. Exported events are edited in the device calendar; the saved My Vibe copy remains separate. Removing a saved plan does not delete the device event, and its link is retained to prevent accidental re-addition of the same concert. Permission revocation produces an unknown state, not a false “In Calendar” state.
 
@@ -54,7 +56,8 @@ This is one-way export, not two-way sync. Duplicate recovery after losing local 
 ## Validation completed
 
 - TypeScript passes.
-- Six calendar-engine tests pass: parallel taps, existing ID across calendars, deleted event, failed-link persistence recovery, uncertain reads, and invalid date/title/range.
+- Calendar-engine tests pass: parallel taps, existing ID across calendars, deleted event, failed-link persistence recovery, uncertain reads, and invalid date/title/range.
+- Google calendar helper tests pass: source detection, Google-first sorting, choice labels, embed URL validation/override, and Agenda chrome params.
 - Expo export passes for iOS, Android, and web.
 - iOS and Android native project generation passes.
 - The live deployed concert feed returns `ok: true` with real events.
