@@ -25,7 +25,8 @@ Xcode is installed on this Mac. This Codex session could not connect to CoreSimu
 
 ## First useful screens
 
-- **Home:** native My Vibe branding, upcoming saved plans, Shows, and the original personal shortcuts. UVA, timer, family calendar, and other unmigrated features open their existing websites.
+- **Home:** native My Vibe branding, upcoming saved plans, Shows, and remaining personal shortcuts (HIIT Timer, family calendar & school links).
+- **UVA:** native football and basketball upcoming games from the existing `/api/uva/football` and `/api/uva` feeds (next up, next five per sport, HOME/AWAY).
 - **Shows:** real upcoming concerts from the existing `/api/concerts/local` endpoint; Hampton Roads, Richmond, and DC filters; original venue list; ticket links; save a show as a plan.
 - **My calendar:** month grid, day selection, saved-plan agenda, custom plans, editing and removal.
 - **Plan details:** title, native date/time pickers, location and notes; separate local save and device-calendar export; writable calendar selection; permissions/settings handling; verified “In Calendar” state.
@@ -36,7 +37,7 @@ Concert end times default to two hours and are explicitly presented for review. 
 
 Inspected `mikewilley-vibe/my-vibe-app`, main commit `33cb8a7c70d4bad01adfc237f13d2051fb63837a` (see SOURCE.md for exact recorded revision). Source review included `app/page.tsx`, `app/shows/page.tsx`, `app/api/concerts/local/route.ts`, `lib/venueUpcoming.ts`, `lib/supabaseServer.ts`, existing data modules and style tokens.
 
-The mobile client calls the existing deployed concert API, preserving server-side Ticketmaster logic and secrets. `src/reused/concert.ts` and `src/reused/localVenues.ts` are copied from the web repository, with provenance in SOURCE.md. The original palette and home shortcuts are retained. Change the API host with `EXPO_PUBLIC_API_BASE_URL` (see `.env.example`). No API key is needed for this existing public endpoint.
+The mobile client calls the existing deployed concert API, preserving server-side Ticketmaster logic and secrets. `src/reused/concert.ts` and `src/reused/localVenues.ts` are copied from the web repository, with provenance in SOURCE.md. The original palette is retained. Change the API host with `EXPO_PUBLIC_API_BASE_URL` (see `.env.example`). No API key is needed for these existing public endpoints.
 
 The existing Supabase client uses a **service role key on the server** for venue monitoring. It is intentionally not copied into the mobile app. There is no existing Supabase sign-in or per-user saved-calendar table in the inspected code. This version therefore stores plans and calendar-event links locally with AsyncStorage, independent of the web Google Calendar embed. It does not sync saved plans between devices or read the family calendar. Supabase venue monitoring continues to run unchanged on the web backend.
 

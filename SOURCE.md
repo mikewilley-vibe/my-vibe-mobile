@@ -15,5 +15,6 @@ Adapted into native components:
 
 Reused without changing the server:
 - `/api/concerts/local` endpoint and Concert response contract.
+- `/api/uva` (basketball) and `/api/uva/football` schedule endpoints. The native UVA tab filters to the next five upcoming games per sport, matching `app/uva/page.tsx`.
 
 No server secret or Supabase service role credential is bundled.
