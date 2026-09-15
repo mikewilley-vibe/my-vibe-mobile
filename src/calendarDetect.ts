@@ -1,11 +1,13 @@
 export type CalendarSourceHint = { name?: string | null; type?: string | null };
 export type CalendarLike = {
+ id?: string | null;
  title?: string | null;
  name?: string | null;
  type?: string | null;
  ownerAccount?: string | null;
  source?: CalendarSourceHint | null;
 };
+export type CalendarView = 'agenda' | 'month';
 
 const GOOGLE_HINT=/google|gmail|googlemail/i;
 
@@ -22,10 +24,62 @@ export function preferGoogleCalendars<T extends CalendarLike>(calendars: T[]): T
  return [...calendars.filter(isGoogleCalendar), ...calendars.filter(c => !isGoogleCalendar(c))];
 }
 
-export function calendarChoiceLabel(calendar: CalendarLike, options?: { recommended?: boolean }): string {
+export function calendarChoiceLabel(calendar: CalendarLike, options?: { recommended?: boolean; family?: boolean }): string {
  const title=calendar.title?.trim()||'Untitled calendar';
- const base=isGoogleCalendar(calendar)?`Google · ${title}`:calendar.source?.name?`${title} · ${calendar.source.name}`:title;
+ const google=options?.family||isGoogleCalendar(calendar);
+ const base=options?.family?`Family · Google · ${title}`:google?`Google · ${title}`:calendar.source?.name?`${title} · ${calendar.source.name}`:title;
  return options?.recommended?`${base} · recommended`:base;
+}
+
+function normalizeCalendarSrc(value: string): string | null {
+ let candidate=value.trim();
+ try { candidate=decodeURIComponent(candidate); } catch { /* keep raw */ }
+ candidate=candidate.trim().toLowerCase();
+ return candidate||null;
+}
+
+/** Email or calendar id from an embed URL, or a bare email/id. */
+export function familyCalendarSrc(embedSrcOrEmail?: string | null): string | null {
+ if (!embedSrcOrEmail?.trim()) return null;
+ const raw=embedSrcOrEmail.trim();
+ try {
+  const url=new URL(raw);
+  if (url.hostname!=='calendar.google.com') return null;
+  const src=url.searchParams.get('src');
+  return src?normalizeCalendarSrc(src):null;
+ } catch {
+  return normalizeCalendarSrc(raw);
+ }
+}
+
+function calendarIdentityValues(calendar: CalendarLike): string[] {
+ return [calendar.title, calendar.name, calendar.ownerAccount, calendar.source?.name, calendar.source?.type]
+  .filter((value): value is string => typeof value === 'string' && !!value.trim())
+  .map(value => value.trim().toLowerCase());
+}
+
+/** True when a device Google calendar is the family calendar from the public embed `src`. */
+export function matchesFamilyGoogleCalendar(calendar: CalendarLike, embedSrcOrEmail?: string | null): boolean {
+ if (!isGoogleCalendar(calendar)) return false;
+ const target=familyCalendarSrc(embedSrcOrEmail);
+ if (!target) return false;
+ return calendarIdentityValues(calendar).some(value => value === target || value.includes(target));
+}
+
+export function preferFamilyThenGoogleCalendars<T extends CalendarLike>(calendars: T[], embedSrcOrEmail?: string | null): T[] {
+ const family=calendars.filter(c => matchesFamilyGoogleCalendar(c, embedSrcOrEmail));
+ const rest=calendars.filter(c => !matchesFamilyGoogleCalendar(c, embedSrcOrEmail));
+ return [...family, ...preferGoogleCalendars(rest)];
+}
+
+/** The one writable family Google calendar, if matching is unambiguous. */
+export function familyCalendarTarget<T extends CalendarLike>(calendars: T[], embedSrcOrEmail?: string | null): T | null {
+ const matches=calendars.filter(c => matchesFamilyGoogleCalendar(c, embedSrcOrEmail));
+ return matches.length===1?matches[0]:null;
+}
+
+export function defaultCalendarView(embedSrc?: string | null): CalendarView {
+ return embedSrc?'agenda':'month';
 }
 
 export function isMyVibeDeviceEvent(notes?: string | null): boolean {

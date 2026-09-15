@@ -2,7 +2,7 @@ import * as Calendar from 'expo-calendar/legacy';
 import { Platform } from 'react-native';
 import { makeCalendarWriter, type Plan } from './model';
 import { saveLink } from './store';
-import { GOOGLE_CALENDAR_SETUP_HINT, isGoogleCalendar, preferGoogleCalendars } from './calendarDetect';
+import { GOOGLE_CALENDAR_SETUP_HINT, isGoogleCalendar, preferFamilyThenGoogleCalendars, resolveGoogleCalendarEmbedUrl } from './calendarDetect';
 export type DeviceEvent = { id: string; calendarId: string; title: string; start: string; end: string; location: string; notes: string; calendarTitle: string };
 export type GoogleMonth = { access: 'granted' | 'denied' | 'unavailable'; events: DeviceEvent[]; hasGoogleCalendar: boolean };
 function asIso(value: unknown): string {
@@ -18,7 +18,7 @@ export async function calendars(){
  if(permission.status!=='granted') throw new Error('Allow Calendar access in Settings to add plans. Your My Vibe plans are still saved.');
  const writable=(await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT)).filter(c=>c.allowsModifications);
  if(!writable.length) throw new Error('No writable calendar was found. Set up a calendar account in the Calendar app, then try again. '+GOOGLE_CALENDAR_SETUP_HINT);
- return preferGoogleCalendars(writable);
+ return preferFamilyThenGoogleCalendars(writable, resolveGoogleCalendarEmbedUrl(process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_EMBED_URL));
 }
 export async function googleMonthEvents(start: Date, end: Date): Promise<GoogleMonth> {
  if(Platform.OS==='web') return {access:'unavailable',events:[],hasGoogleCalendar:false};

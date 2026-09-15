@@ -4,7 +4,7 @@ import { router,useFocusEffect } from 'expo-router';
 import { WebView } from 'react-native-webview';
 import { useData } from '../../src/store';
 import { googleMonthEvents,openCalendar,type DeviceEvent,type GoogleMonth } from '../../src/calendar';
-import { agendaEmbedUrl,GOOGLE_CALENDAR_SETUP_HINT,isMyVibeDeviceEvent,monthRange,resolveGoogleCalendarEmbedUrl } from '../../src/calendarDetect';
+import { agendaEmbedUrl,defaultCalendarView,GOOGLE_CALENDAR_SETUP_HINT,isMyVibeDeviceEvent,monthRange,resolveGoogleCalendarEmbedUrl } from '../../src/calendarDetect';
 import { Page,Card,Button,styles,colors,when,problem } from '../../src/ui';
 
 const dayKey=(d:Date)=>`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
@@ -12,7 +12,7 @@ const embedSrc=(()=>{const resolved=resolveGoogleCalendarEmbedUrl(process.env.EX
 
 function AgendaEmbed({src,reloadKey}:{src:string;reloadKey:number}){
  if(Platform.OS==='web'){
-  return createElement('iframe',{key:reloadKey,title:'Google Calendar agenda',src,style:{border:0,width:'100%',height:560},referrerPolicy:'no-referrer-when-downgrade'});
+  return createElement('iframe',{key:reloadKey,title:'Google Calendar agenda',src,style:{border:0,width:'100%',height:720},referrerPolicy:'no-referrer-when-downgrade'});
  }
  return <WebView key={reloadKey} accessibilityLabel="Google Calendar agenda" source={{uri:src}} style={{flex:1,backgroundColor:'white'}} startInLoadingState nestedScrollEnabled javaScriptEnabled renderLoading={()=><ActivityIndicator accessibilityLabel="Loading Google Calendar" color={colors.harbor} style={{marginTop:40}}/>}/>;
 }
@@ -21,7 +21,7 @@ export default function MyCalendar(){
  const {plans,links}=useData();
  const [month,setMonth]=useState(()=>new Date(new Date().getFullYear(),new Date().getMonth(),1));
  const [selected,setSelected]=useState<string|null>(null);
- const [view,setView]=useState<'month'|'agenda'>('month');
+ const [view,setView]=useState<'month'|'agenda'>(()=>defaultCalendarView(embedSrc));
  const [access,setAccess]=useState<GoogleMonth['access']>('unavailable');
  const [googleEvents,setGoogleEvents]=useState<DeviceEvent[]>([]);
  const [hasGoogleCalendar,setHasGoogleCalendar]=useState(false);
@@ -65,13 +65,13 @@ export default function MyCalendar(){
   <Text style={styles.title}>My calendar</Text>
   <Button title="+ Create a plan" onPress={()=>router.push('/plan')}/>
   {!!embedSrc&&<View style={styles.row}>
-   <Pressable accessibilityRole="button" accessibilityState={{selected:view==='month'}} onPress={()=>setView('month')} style={[styles.button,view!=='month'&&{backgroundColor:colors.fog}]}><Text style={[styles.buttonText,view!=='month'&&{color:colors.ink}]}>Month</Text></Pressable>
    <Pressable accessibilityRole="button" accessibilityState={{selected:view==='agenda'}} onPress={()=>setView('agenda')} style={[styles.button,view!=='agenda'&&{backgroundColor:colors.fog}]}><Text style={[styles.buttonText,view!=='agenda'&&{color:colors.ink}]}>Agenda</Text></Pressable>
+   <Pressable accessibilityRole="button" accessibilityState={{selected:view==='month'}} onPress={()=>setView('month')} style={[styles.button,view!=='month'&&{backgroundColor:colors.fog}]}><Text style={[styles.buttonText,view!=='month'&&{color:colors.ink}]}>Month</Text></Pressable>
   </View>}
   {view==='agenda'&&embedSrc&&<Card>
-   <Text style={styles.heading}>Family calendar</Text>
-   <Text style={styles.body}>Public events from Google Calendar. Your saved My Vibe plans still appear on the Month view.</Text>
-   <View style={{height:560,overflow:'hidden',borderRadius:16,borderWidth:1,borderColor:colors.fog,backgroundColor:'white'}}>
+   <Text style={styles.heading}>Family agenda</Text>
+   <Text style={styles.body}>Quick view of your Google family calendar. Use + Create a plan to add something. Month still shows My Vibe plans and events on this phone.</Text>
+   <View style={{height:720,marginHorizontal:-20,marginBottom:-20,overflow:'hidden',borderBottomLeftRadius:20,borderBottomRightRadius:20,borderTopWidth:1,borderColor:colors.fog,backgroundColor:'white'}}>
     <AgendaEmbed src={embedSrc} reloadKey={embedNonce}/>
    </View>
   </Card>}

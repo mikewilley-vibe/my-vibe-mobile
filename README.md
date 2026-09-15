@@ -28,8 +28,8 @@ Xcode is installed on this Mac. This Codex session could not connect to CoreSimu
 - **Home:** native My Vibe branding, upcoming saved plans, Shows, and remaining personal shortcuts (HIIT Timer, family calendar & school links).
 - **UVA:** native football and basketball upcoming games from the existing `/api/uva/football` and `/api/uva` feeds (next up, next five per sport, HOME/AWAY).
 - **Shows:** real upcoming concerts from ShowSignal’s production Ticketmaster API; Hampton Roads, Richmond, and DC filters; original venue list; ticket links; save a show as a plan; **Open in ShowSignal** opens that concert in the ShowSignal app (`showsignal://concert/{id}`), or the ShowSignal website if the app isn’t installed.
-- **My calendar:** month grid with saved My Vibe plans and Google events from calendars already on the device; day selection; Agenda WebView of the public Google Calendar embed; custom plans, editing and removal.
-- **Plan details:** title, native date/time pickers, location and notes; separate local save and device-calendar export; **Add to Calendar** with Google calendars listed first; permissions/settings handling; verified “In Calendar” state.
+- **My calendar:** opens on **Agenda** (the public Google family calendar) when an embed URL is configured; Month is a secondary toggle for saved My Vibe plans and Google events already on the device; custom plans, editing and removal.
+- **Plan details:** title, native date/time pickers, location and notes; separate local save and device-calendar export; **Add to Calendar** prefers the family Google calendar that matches the Agenda embed, with a one-tap “Add to Family Google calendar” action when the match is clear; permissions/settings handling; verified “In Calendar” state.
 
 Concert end times default to two hours and are explicitly presented for review. Dates retain an absolute instant and display in the device time zone. Date-only archived shows were not imported as timed events or presented as upcoming.
 
@@ -45,9 +45,9 @@ A future shared-save phase should first add Supabase Auth and a user-owned plans
 
 ## Calendar behavior and limits
 
-Selecting a writable calendar confirms creation. Google-sourced device calendars (detected from `source.name` / `source.type` and common Gmail/Google patterns) are listed first and labeled clearly; other calendars remain available below. My Vibe saves the plan first, requests access for export and for reading Google events on the My calendar tab, writes title/start/end/location/notes and a source link, and stores the resulting native event ID. Concurrent taps share one operation. Before another write, it checks that ID; it also searches all readable calendars around the plan dates for a stable source marker, recovering from a failed local write after event creation. Explicit event-not-found errors allow re-adding; unknown read failures fail closed.
+Selecting a writable calendar confirms creation. Viewing the Agenda uses the public Google Calendar embed; adding uses the Google calendar synced on the phone (device `expo-calendar` only — My Vibe does not write to the public embed URL). The family calendar is the one whose title, source, or account email matches the embed `src` (default `mikewilley@gmail.com`). If exactly one writable Google calendar matches, Add to Calendar shows a single “Add to Family Google calendar” button and hides the long picker behind “Choose a different calendar.” If several Google calendars exist and one matches, that match is listed first as `Family · Google · …`. Otherwise Google-sourced device calendars (detected from `source.name` / `source.type` and common Gmail/Google patterns) are still listed first and labeled clearly; other calendars remain available below. My Vibe saves the plan first, requests access for export and for reading Google events on the My calendar tab, writes title/start/end/location/notes and a source link, and stores the resulting native event ID. Concurrent taps share one operation. Before another write, it checks that ID; it also searches all readable calendars around the plan dates for a stable source marker, recovering from a failed local write after event creation. Explicit event-not-found errors allow re-adding; unknown read failures fail closed.
 
-The My calendar tab also loads events from Google-sourced device calendars for the visible month via `expo-calendar` (no Google OAuth or Calendar API). If calendar permission is denied, saved My Vibe plans still show. An in-app Agenda WebView uses the public `calendar.google.com/.../calendar/embed` URL (override with `EXPO_PUBLIC_GOOGLE_CALENDAR_EMBED_URL`; see `.env.example`).
+The My calendar tab opens on Agenda when the public embed is configured. Month still loads events from Google-sourced device calendars via `expo-calendar` (no Google OAuth or Calendar API). If calendar permission is denied, saved My Vibe plans still show. The Agenda WebView uses the public `calendar.google.com/.../calendar/embed` URL (override with `EXPO_PUBLIC_GOOGLE_CALENDAR_EMBED_URL`; see `.env.example`).
 
 Status is rechecked when the detail screen opens and when the app returns to the foreground. Exported events are edited in the device calendar; the saved My Vibe copy remains separate. Removing a saved plan does not delete the device event, and its link is retained to prevent accidental re-addition of the same concert. Permission revocation produces an unknown state, not a false “In Calendar” state.
 
@@ -57,7 +57,7 @@ This is one-way export, not two-way sync. Duplicate recovery after losing local 
 
 - TypeScript passes.
 - Calendar-engine tests pass: parallel taps, existing ID across calendars, deleted event, failed-link persistence recovery, uncertain reads, and invalid date/title/range.
-- Google calendar helper tests pass: source detection, Google-first sorting, choice labels, embed URL validation/override, and Agenda chrome params.
+- Google calendar helper tests pass: source detection, Google-first sorting, family-calendar matching, agenda-default view, choice labels, embed URL validation/override, and Agenda chrome params.
 - Expo export passes for iOS, Android, and web.
 - iOS and Android native project generation passes.
 - The live deployed concert feed returns `ok: true` with real events.
