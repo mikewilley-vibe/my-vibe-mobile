@@ -26,7 +26,7 @@ function envScheme(name: string): string | undefined {
 }
 
 /**
- * Ecosystem apps linked from My Projects — not Home.
+ * Ecosystem apps linked from My Projects cards — not a separate Home strip.
  * Add an app by appending to this list. Do not invent production URLs.
  */
 export function hubApps(): HubApp[] {
