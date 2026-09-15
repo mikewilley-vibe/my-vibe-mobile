@@ -8,6 +8,7 @@ import {
  parseGoogleCalendarEmbedUrl,
  resolveGoogleCalendarEmbedUrl,
  agendaEmbedUrl,
+ monthEmbedUrl,
  isMyVibeDeviceEvent,
  monthRange,
  DEFAULT_GOOGLE_CALENDAR_EMBED_URL,
@@ -82,6 +83,20 @@ test('agenda embed hides Google chrome and uses AGENDA mode', () => {
  assert.equal(url.searchParams.get('ctz'),'America/New_York');
 });
 
+test('month embed matches the website MONTH mode and hides Google chrome', () => {
+ const url=new URL(monthEmbedUrl(DEFAULT_GOOGLE_CALENDAR_EMBED_URL));
+ assert.equal(url.hostname,'calendar.google.com');
+ assert.ok(url.pathname.includes('/calendar/embed'));
+ assert.equal(url.searchParams.get('mode'),'MONTH');
+ assert.equal(url.searchParams.get('showTitle'),'0');
+ assert.equal(url.searchParams.get('showTabs'),'0');
+ assert.equal(url.searchParams.get('showCalendars'),'0');
+ assert.equal(url.searchParams.get('showPrint'),'0');
+ assert.equal(url.searchParams.get('showTz'),'0');
+ assert.equal(url.searchParams.get('src'),'mikewilley@gmail.com');
+ assert.equal(url.searchParams.get('ctz'),'America/New_York');
+});
+
 test('monthRange covers the visible local month', () => {
  const {start,end}=monthRange(new Date(2026,8,1));
  assert.equal(start.getFullYear(),2026);
@@ -132,9 +147,10 @@ test('family Google calendars are listed before other Google calendars', () => {
  assert.deepEqual(listed.map(c=>c.id),['3','2','1']);
 });
 
-test('agenda is the default view when an embed is configured', () => {
- assert.equal(defaultCalendarView(agendaEmbedUrl(DEFAULT_GOOGLE_CALENDAR_EMBED_URL)),'agenda');
- assert.equal(defaultCalendarView(resolveGoogleCalendarEmbedUrl(undefined)),'agenda');
+test('month is the default view even when an embed is configured', () => {
+ assert.equal(defaultCalendarView(monthEmbedUrl(DEFAULT_GOOGLE_CALENDAR_EMBED_URL)),'month');
+ assert.equal(defaultCalendarView(agendaEmbedUrl(DEFAULT_GOOGLE_CALENDAR_EMBED_URL)),'month');
+ assert.equal(defaultCalendarView(resolveGoogleCalendarEmbedUrl(undefined)),'month');
  assert.equal(defaultCalendarView(null),'month');
  assert.equal(defaultCalendarView(''),'month');
 });

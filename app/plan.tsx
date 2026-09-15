@@ -43,12 +43,12 @@ export default function Detail(){
  {!!choices.length&&<Card>
   {familyTarget&&!showAllCalendars?<>
    <Text style={styles.heading}>Family Google calendar</Text>
-   <Text style={styles.body}>Add this plan to the same Google family calendar you see on Agenda. It uses the calendar already on your phone.</Text>
+   <Text style={styles.body}>Add this plan to the same Google family calendar you see on My calendar. It uses the calendar already on your phone.</Text>
    <Button title="Add to Family Google calendar" disabled={busy} onPress={()=>void add(familyTarget.id)}/>
    <Button title="Choose a different calendar" disabled={busy} onPress={()=>setShowAllCalendars(true)}/>
   </>:<>
    <Text style={styles.heading}>Choose a calendar</Text>
-   <Text style={styles.body}>{familyMatchCount?'Your family Google calendar is first — that’s the one from Agenda.':googleCount===1?'Your Google calendar is first — that’s usually the right one.':'Google calendars are listed first. Tap one to add this plan.'}</Text>
+   <Text style={styles.body}>{familyMatchCount?'Your family Google calendar is first — that’s the one from My calendar.':googleCount===1?'Your Google calendar is first — that’s usually the right one.':'Google calendars are listed first. Tap one to add this plan.'}</Text>
    {!googleCount&&<Text style={styles.body}>{GOOGLE_CALENDAR_SETUP_HINT}</Text>}
    {choices.map(c=><Button key={c.id} title={calendarChoiceLabel(c,{family:matchesFamilyGoogleCalendar(c,familyEmbed),recommended:(familyMatchCount===1&&matchesFamilyGoogleCalendar(c,familyEmbed))||(!familyMatchCount&&googleCount===1&&isGoogleCalendar(c))})} disabled={busy} onPress={()=>void add(c.id)}/>)}
   </>}

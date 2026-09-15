@@ -4,24 +4,26 @@ import { router,useFocusEffect } from 'expo-router';
 import { WebView } from 'react-native-webview';
 import { useData } from '../../src/store';
 import { googleMonthEvents,openCalendar,type DeviceEvent,type GoogleMonth } from '../../src/calendar';
-import { agendaEmbedUrl,defaultCalendarView,GOOGLE_CALENDAR_SETUP_HINT,isMyVibeDeviceEvent,monthRange,resolveGoogleCalendarEmbedUrl } from '../../src/calendarDetect';
+import { agendaEmbedUrl,defaultCalendarView,GOOGLE_CALENDAR_SETUP_HINT,isMyVibeDeviceEvent,monthEmbedUrl,monthRange,resolveGoogleCalendarEmbedUrl } from '../../src/calendarDetect';
 import { Page,Card,Button,styles,colors,when,problem } from '../../src/ui';
 
 const dayKey=(d:Date)=>`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-const embedSrc=(()=>{const resolved=resolveGoogleCalendarEmbedUrl(process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_EMBED_URL);return resolved?agendaEmbedUrl(resolved):null})();
+const resolvedEmbed=resolveGoogleCalendarEmbedUrl(process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_EMBED_URL);
+const monthSrc=resolvedEmbed?monthEmbedUrl(resolvedEmbed):null;
+const agendaSrc=resolvedEmbed?agendaEmbedUrl(resolvedEmbed):null;
 
-function AgendaEmbed({src,reloadKey}:{src:string;reloadKey:number}){
+function FamilyEmbed({src,reloadKey,label}:{src:string;reloadKey:number;label:string}){
  if(Platform.OS==='web'){
-  return createElement('iframe',{key:reloadKey,title:'Google Calendar agenda',src,style:{border:0,width:'100%',height:720},referrerPolicy:'no-referrer-when-downgrade'});
+  return createElement('iframe',{key:reloadKey,title:label,src,style:{border:0,width:'100%',height:720},referrerPolicy:'no-referrer-when-downgrade'});
  }
- return <WebView key={reloadKey} accessibilityLabel="Google Calendar agenda" source={{uri:src}} style={{flex:1,backgroundColor:'white'}} startInLoadingState nestedScrollEnabled javaScriptEnabled renderLoading={()=><ActivityIndicator accessibilityLabel="Loading Google Calendar" color={colors.harbor} style={{marginTop:40}}/>}/>;
+ return <WebView key={reloadKey} accessibilityLabel={label} source={{uri:src}} style={{flex:1,backgroundColor:'white'}} startInLoadingState nestedScrollEnabled javaScriptEnabled renderLoading={()=><ActivityIndicator accessibilityLabel="Loading Google Calendar" color={colors.harbor} style={{marginTop:40}}/>}/>;
 }
 
 export default function MyCalendar(){
  const {plans,links}=useData();
  const [month,setMonth]=useState(()=>new Date(new Date().getFullYear(),new Date().getMonth(),1));
  const [selected,setSelected]=useState<string|null>(null);
- const [view,setView]=useState<'month'|'agenda'>(()=>defaultCalendarView(embedSrc));
+ const [view,setView]=useState<'month'|'agenda'>(()=>defaultCalendarView(resolvedEmbed));
  const [access,setAccess]=useState<GoogleMonth['access']>('unavailable');
  const [googleEvents,setGoogleEvents]=useState<DeviceEvent[]>([]);
  const [hasGoogleCalendar,setHasGoogleCalendar]=useState(false);
@@ -37,8 +39,10 @@ export default function MyCalendar(){
   ...visiblePlans.map(plan=>({key:'plan:'+plan.id,start:plan.start,kind:'plan' as const,title:plan.title,location:plan.location,planId:plan.id})),
   ...visibleGoogle.map(event=>({key:'google:'+event.id,start:event.start,kind:'google' as const,title:event.title,location:event.location||event.calendarTitle,event})),
  ].sort((a,b)=>a.start.localeCompare(b.start)||(a.kind==='plan'?-1:1));
+ const showNativeMonth=view==='month'&&!monthSrc;
 
  const loadGoogle=useCallback(async()=>{
+  if(!showNativeMonth) return;
   setGoogleError('');
   const range=monthRange(month);
   try{
@@ -49,7 +53,7 @@ export default function MyCalendar(){
   }catch(e){
    setGoogleError(e instanceof Error?e.message:'Google events could not load. Pull to refresh and try again.');
   }
- },[month]);
+ },[month,showNativeMonth]);
 
  useFocusEffect(useCallback(()=>{void loadGoogle();},[loadGoogle]));
 
@@ -64,18 +68,25 @@ export default function MyCalendar(){
   <Text style={styles.eyebrow}>MAKE ROOM FOR THE GOOD STUFF</Text>
   <Text style={styles.title}>My calendar</Text>
   <Button title="+ Create a plan" onPress={()=>router.push('/plan')}/>
-  {!!embedSrc&&<View style={styles.row}>
-   <Pressable accessibilityRole="button" accessibilityState={{selected:view==='agenda'}} onPress={()=>setView('agenda')} style={[styles.button,view!=='agenda'&&{backgroundColor:colors.fog}]}><Text style={[styles.buttonText,view!=='agenda'&&{color:colors.ink}]}>Agenda</Text></Pressable>
+  {!!resolvedEmbed&&<View style={styles.row}>
    <Pressable accessibilityRole="button" accessibilityState={{selected:view==='month'}} onPress={()=>setView('month')} style={[styles.button,view!=='month'&&{backgroundColor:colors.fog}]}><Text style={[styles.buttonText,view!=='month'&&{color:colors.ink}]}>Month</Text></Pressable>
+   <Pressable accessibilityRole="button" accessibilityState={{selected:view==='agenda'}} onPress={()=>setView('agenda')} style={[styles.button,view!=='agenda'&&{backgroundColor:colors.fog}]}><Text style={[styles.buttonText,view!=='agenda'&&{color:colors.ink}]}>Agenda</Text></Pressable>
   </View>}
-  {view==='agenda'&&embedSrc&&<Card>
-   <Text style={styles.heading}>Family agenda</Text>
-   <Text style={styles.body}>Quick view of your Google family calendar. Use + Create a plan to add something. Month still shows My Vibe plans and events on this phone.</Text>
+  {view==='month'&&monthSrc&&<Card>
+   <Text style={styles.heading}>Family calendar</Text>
+   <Text style={styles.body}>The same month view as the website. Use + Create a plan to add something. Agenda is a quick list.</Text>
    <View style={{height:720,marginHorizontal:-20,marginBottom:-20,overflow:'hidden',borderBottomLeftRadius:20,borderBottomRightRadius:20,borderTopWidth:1,borderColor:colors.fog,backgroundColor:'white'}}>
-    <AgendaEmbed src={embedSrc} reloadKey={embedNonce}/>
+    <FamilyEmbed src={monthSrc} reloadKey={embedNonce} label="Google Calendar month"/>
    </View>
   </Card>}
-  {view==='month'&&<>
+  {view==='agenda'&&agendaSrc&&<Card>
+   <Text style={styles.heading}>Family agenda</Text>
+   <Text style={styles.body}>Quick list of your Google family calendar. Use + Create a plan to add something. Month is the website-like family calendar.</Text>
+   <View style={{height:720,marginHorizontal:-20,marginBottom:-20,overflow:'hidden',borderBottomLeftRadius:20,borderBottomRightRadius:20,borderTopWidth:1,borderColor:colors.fog,backgroundColor:'white'}}>
+    <FamilyEmbed src={agendaSrc} reloadKey={embedNonce} label="Google Calendar agenda"/>
+   </View>
+  </Card>}
+  {showNativeMonth&&<>
    <Card>
     <View style={styles.row}><Button title="‹" onPress={()=>move(-1)}/><Text style={styles.heading}>{month.toLocaleDateString(undefined,{month:'long',year:'numeric'})}</Text><Button title="›" onPress={()=>move(1)}/></View>
     <View style={{flexDirection:'row',flexWrap:'wrap'}}>

@@ -78,8 +78,8 @@ export function familyCalendarTarget<T extends CalendarLike>(calendars: T[], emb
  return matches.length===1?matches[0]:null;
 }
 
-export function defaultCalendarView(embedSrc?: string | null): CalendarView {
- return embedSrc?'agenda':'month';
+export function defaultCalendarView(_embedSrc?: string | null): CalendarView {
+ return 'month';
 }
 
 export function isMyVibeDeviceEvent(notes?: string | null): boolean {
@@ -105,9 +105,9 @@ export function resolveGoogleCalendarEmbedUrl(envValue?: string | null): string 
  return parseGoogleCalendarEmbedUrl(envValue) ?? parseGoogleCalendarEmbedUrl(DEFAULT_GOOGLE_CALENDAR_EMBED_URL);
 }
 
-export function agendaEmbedUrl(src: string, timezone='America/New_York'): string {
+function chromeEmbedUrl(src: string, mode:'AGENDA'|'MONTH', timezone='America/New_York'): string {
  const url=new URL(src);
- url.searchParams.set('mode','AGENDA');
+ url.searchParams.set('mode',mode);
  url.searchParams.set('ctz',timezone);
  url.searchParams.set('showTitle','0');
  url.searchParams.set('showTabs','0');
@@ -115,4 +115,12 @@ export function agendaEmbedUrl(src: string, timezone='America/New_York'): string
  url.searchParams.set('showPrint','0');
  url.searchParams.set('showTz','0');
  return url.toString();
+}
+
+export function agendaEmbedUrl(src: string, timezone='America/New_York'): string {
+ return chromeEmbedUrl(src,'AGENDA',timezone);
+}
+
+export function monthEmbedUrl(src: string, timezone='America/New_York'): string {
+ return chromeEmbedUrl(src,'MONTH',timezone);
 }
