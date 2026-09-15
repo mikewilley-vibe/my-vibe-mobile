@@ -6,12 +6,12 @@ My Vibe is the personal hub. Sibling apps stay independent. This file is the con
 
 | Source | How it shows up | Data |
 | --- | --- | --- |
-| Personal / My Vibe | Home month grid | Saved plans on this device (`src/store.ts`) |
-| Google Calendar | Home month grid + My calendar embed | Device calendars via `expo-calendar`; family embed via `EXPO_PUBLIC_GOOGLE_CALENDAR_EMBED_URL` |
+| Personal / My Vibe | Calendar month grid | Saved plans on this device (`src/store.ts`) |
+| Google Calendar | Calendar Family embed + native month grid | Device calendars via `expo-calendar`; family embed via `EXPO_PUBLIC_GOOGLE_CALENDAR_EMBED_URL` |
 | ShowSignal | Shows tab; saved concerts on the month grid as source `showsignal` | Existing `POST /api/v1/ticketmaster/events` |
-| UVA Sports | UVA tab (unchanged schedule/results) **and** Home month grid | Existing `GET /api/uva/football` and `GET /api/uva` on `EXPO_PUBLIC_API_BASE_URL` |
+| UVA Sports | UVA tab (unchanged schedule/results) **and** Calendar month grid | Existing `GET /api/uva/football` and `GET /api/uva` on `EXPO_PUBLIC_API_BASE_URL` |
 
-The month calendar is still the Home hero. Apps and projects live on **My Projects**, not Home.
+Launch opens **Calendar**. Family Google Calendar is the first section; the native multi-source month grid (formerly the Home hero) is reused below it from `src/HomeMonthCalendar.tsx`. Apps and projects live on **My Projects**. The Home route is hidden from the tab bar but kept as an importable module.
 
 ## Calendar sources
 
@@ -19,7 +19,7 @@ Normalized events are `MonthEvent` objects (`src/monthGrid.ts`) with a required 
 
 `personal` | `google` | `showsignal` | `uva-sports` | `sweatshift`
 
-`src/calendarMerge.ts` is the only merge path. Home does not treat every item as the same kind internally. Compact source chips under the grid toggle visibility (stored in AsyncStorage key `my-vibe:calendar-sources:v1`). That is a settings hook, not a full Settings screen.
+`src/calendarMerge.ts` is the only merge path. Calendar does not treat every item as the same kind internally. Compact source chips under the grid toggle visibility (stored in AsyncStorage key `my-vibe:calendar-sources:v1`). That is a settings hook, not a full Settings screen.
 
 HapsHere is reserved as a later calendar source. It is an app link today, not a feed.
 
@@ -59,7 +59,7 @@ Expected feed item (already used by the UVA tab, with optional extras):
 }
 ```
 
-Pull-to-refresh on the UVA tab busts a 5-minute in-memory cache so Home and UVA stay on one schedule.
+Pull-to-refresh on the UVA tab busts a 5-minute in-memory cache so Calendar and UVA stay on one schedule.
 
 ## SweatShift (not live)
 
@@ -90,9 +90,11 @@ Add another ecosystem app by appending `src/hubApps.ts` (`hubApps()`).
 
 ## My Projects
 
-Data file: `src/projects.ts` (`PROJECTS`). Adding a project is appending an object: name, short description, category, icon, status, technologies, and optional public `website` / `appLink` / `github` / `appStore`. Categories: Mobile Apps, Web Apps, Websites, AI Projects, Business/Client Work, Experiments.
+Data file: `src/projects.ts` (`PROJECTS`). Adding a project is appending an object: `name`, `description`, `type`, `status`, and optional public `url` / `githubUrl` / `appStoreUrl` / `image`. Types: Website, iOS App, Web App, Experiment, AI, Business. Status: Live, In Development, Archived.
 
-Never put a private repository URL on `github`.
+Aliases still work: `shortDescription`, `category`, `website`, `github`, `appStore`. Concert Finder is the former name of ShowSignal — do not add a second card.
+
+Never put a private repository URL on `github` / `githubUrl`.
 
 ## Verify locally
 
@@ -103,4 +105,4 @@ npm run check    # tsc --noEmit && unit tests
 
 There is no lint script in this package.
 
-Manual: Home month grid still pages months and shows saved plans; Google events still appear when Calendar permission is granted; UVA games overlay with source “UVA Sports”; tapping a game shows known details only; My Projects tab lists cards and My Apps; HapsHere stays URL-needed unless env is set.
+Manual: Calendar lands first with Family embed on top and the native month grid below; the grid still pages months and shows saved plans; Google events still appear when Calendar permission is granted; UVA games overlay with source “UVA Sports”; tapping a game shows known details only; My Projects tab lists catalog cards from `src/projects.ts`; HapsHere stays URL-needed unless env is set.

@@ -18,13 +18,16 @@ test('ShowSignal keeps an https origin and the app scheme', () => {
   assert.match(show?.url || '', /^https:\/\//);
 });
 
-test('project catalog covers required categories and never lists a private GitHub', () => {
-  assert.deepEqual(PROJECT_CATEGORIES.map(item => item.id), ['mobile', 'web-app', 'website', 'ai', 'business', 'experiment']);
+test('project catalog covers required types and never lists a private GitHub', () => {
+  assert.deepEqual(PROJECT_CATEGORIES.map(item => item.id), ['ios-app', 'web-app', 'website', 'ai', 'business', 'experiment']);
   assert.ok(PROJECTS.some(project => project.id === 'sweatshift'));
   for (const project of PROJECTS) {
-    if (project.github) assert.match(project.github, /^https:\/\/github.com\/mikewilley-vibe\/(workout-timer-mobile|concert-finder|my-vibe-mobile)$/);
+    const github = project.githubUrl || project.github;
+    if (github) assert.match(github, /^https:\/\/github.com\/mikewilley-vibe\/(workout-timer-mobile|concert-finder|my-vibe-mobile)$/);
   }
   const hapshere = PROJECTS.find(project => project.id === 'hapshere');
+  assert.equal(hapshere?.githubUrl, undefined);
   assert.equal(hapshere?.github, undefined);
+  assert.equal(hapshere?.url, undefined);
   assert.equal(hapshere?.website, undefined);
 });
