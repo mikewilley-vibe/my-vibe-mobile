@@ -154,6 +154,7 @@ test('zero, one, and overflowing events follow Google-style slot reservation', (
 test('phone cells keep at least two event slots; larger widths can show more', () => {
  assert.equal(cellEventSlots(390, 64), 2);
  assert.equal(cellEventSlots(390, 88), 3);
+ assert.equal(cellEventSlots(1024, 80), 2);
  assert.ok(cellEventSlots(1024, 120) >= 3);
 });
 

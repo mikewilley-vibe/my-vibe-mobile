@@ -132,7 +132,7 @@ export function cellEventSlots(viewportWidth: number, cellHeight: number): numbe
  const row = viewportWidth >= 768 ? 20 : 16;
  const header = 22;
  const slots = Math.floor((cellHeight - header) / row);
- if (viewportWidth >= 768) return Math.max(3, slots);
+ if (viewportWidth >= 768) return Math.max(2, slots);
  return Math.max(2, Math.min(3, slots));
 }
 

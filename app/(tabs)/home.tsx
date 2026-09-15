@@ -142,7 +142,7 @@ const homeStyles = StyleSheet.create({
  greeting: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
  addBtn: { backgroundColor: colors.harbor, borderRadius: 12, paddingHorizontal: 14, minHeight: 40, alignItems: 'center', justifyContent: 'center' },
  addBtnText: { color: 'white', fontSize: 15, fontWeight: '600' },
- dayPane: { flex: 1 },
- dayContent: { paddingHorizontal: 12, paddingTop: 12, paddingBottom: 32, gap: 12 },
+ dayPane: { flex: 1, minHeight: 140 },
+ dayContent: { paddingHorizontal: 12, paddingTop: 10, paddingBottom: 24, gap: 12 },
 });
 

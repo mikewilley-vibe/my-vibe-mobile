@@ -47,7 +47,7 @@ function DayCell({
  onEvent: (event: MonthEvent) => void;
 }) {
  const layout = layoutCellEvents(events, slots);
- const spokenDate = cell.date.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+ const spokenDate = cell.date.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
  const count = events.length;
  const a11y = `${spokenDate}${cell.isToday ? ', today' : ''}${!cell.inMonth ? ', other month' : ''}${count ? `, ${count} ${count === 1 ? 'event' : 'events'}` : ', no events'}`;
  return (
@@ -103,7 +103,9 @@ function DayCell({
     accessibilityLabel={`Create a plan on ${spokenDate}`}
     onPress={() => onCreate(cell)}
     style={calendarStyles.emptyHit}
-   />
+   >
+    <Text accessible={false} style={calendarStyles.emptyHitText}> </Text>
+   </Pressable>
   </View>
  );
 }
@@ -133,22 +135,33 @@ export function MonthCalendar({
  const byDay = indexEventsByDay(events, cells);
  const weeks = monthWeeks(cells);
  const viewingCurrent = isSameMonth(month, new Date());
- const cellHeight = Math.max(68, Math.min(detailed ? 118 : 82, Math.floor((height - (detailed ? 280 : 390)) / 6)));
+ const cellHeight = Math.max(64, Math.min(detailed ? 96 : 78, Math.floor((height - (detailed ? 440 : 420)) / 6)));
  const slots = cellEventSlots(width, cellHeight);
 
  return (
   <View style={calendarStyles.board}>
    <View style={calendarStyles.toolbar}>
-    <Pressable accessibilityRole="button" accessibilityLabel="Previous month" onPress={() => onMonthChange(new Date(month.getFullYear(), month.getMonth() - 1, 1))} style={calendarStyles.navBtn} hitSlop={8}>
-     <Text style={calendarStyles.navText}>‹</Text>
-    </Pressable>
-    <Text style={[styles.heading, calendarStyles.monthLabel]}>{monthTitle(month)}</Text>
-    <Pressable accessibilityRole="button" accessibilityLabel="Next month" onPress={() => onMonthChange(new Date(month.getFullYear(), month.getMonth() + 1, 1))} style={calendarStyles.navBtn} hitSlop={8}>
-     <Text style={calendarStyles.navText}>›</Text>
-    </Pressable>
-    <Pressable accessibilityRole="button" accessibilityLabel="Jump to today" onPress={onToday} style={[calendarStyles.todayBtn, viewingCurrent && calendarStyles.todayBtnCurrent]}>
-     <Text style={[calendarStyles.todayBtnText, viewingCurrent && calendarStyles.todayBtnTextCurrent]}>Today</Text>
-    </Pressable>
+    <View style={calendarStyles.toolbarRow}>
+     <Pressable accessibilityRole="button" accessibilityLabel="Previous month" onPress={() => onMonthChange(new Date(month.getFullYear(), month.getMonth() - 1, 1))} style={calendarStyles.navBtn} hitSlop={8}>
+      <Text style={calendarStyles.navText}>‹</Text>
+     </Pressable>
+     <Text style={[styles.heading, calendarStyles.monthLabel, !detailed && calendarStyles.monthLabelCompact]}>{monthTitle(month)}</Text>
+     <Pressable accessibilityRole="button" accessibilityLabel="Next month" onPress={() => onMonthChange(new Date(month.getFullYear(), month.getMonth() + 1, 1))} style={calendarStyles.navBtn} hitSlop={8}>
+      <Text style={calendarStyles.navText}>›</Text>
+     </Pressable>
+     {detailed && (
+      <Pressable accessibilityRole="button" accessibilityLabel="Jump to today" onPress={onToday} style={[calendarStyles.todayBtn, viewingCurrent && calendarStyles.todayBtnCurrent]}>
+       <Text style={[calendarStyles.todayBtnText, viewingCurrent && calendarStyles.todayBtnTextCurrent]}>Today</Text>
+      </Pressable>
+     )}
+    </View>
+    {!detailed && (
+     <View style={calendarStyles.toolbarTodayRow}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Jump to today" onPress={onToday} style={[calendarStyles.todayBtn, viewingCurrent && calendarStyles.todayBtnCurrent]}>
+       <Text style={[calendarStyles.todayBtnText, viewingCurrent && calendarStyles.todayBtnTextCurrent]}>Today</Text>
+      </Pressable>
+     </View>
+    )}
    </View>
    <View style={calendarStyles.weekdays}>
     {WEEKDAYS.map((label, i) => (
@@ -189,12 +202,19 @@ const calendarStyles = StyleSheet.create({
   overflow: 'hidden',
  },
  toolbar: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  gap: 8,
   paddingHorizontal: 10,
   paddingTop: 10,
   paddingBottom: 6,
+  gap: 6,
+ },
+ toolbarRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 8,
+ },
+ toolbarTodayRow: {
+  flexDirection: 'row',
+  justifyContent: 'center',
  },
  navBtn: {
   minWidth: 44,
@@ -206,6 +226,7 @@ const calendarStyles = StyleSheet.create({
  },
  navText: { color: colors.ink, fontSize: 22, fontWeight: '600' },
  monthLabel: { flex: 1, fontSize: 20, textAlign: 'center' },
+ monthLabelCompact: { fontSize: 18 },
  todayBtn: {
   minHeight: 44,
   paddingHorizontal: 14,
@@ -255,5 +276,6 @@ const calendarStyles = StyleSheet.create({
  chipTextAllDay: { color: 'white' },
  chipTextGoogle: { color: colors.ink },
  more: { fontSize: 10, fontWeight: '700', color: colors.muted, paddingHorizontal: 2, paddingVertical: 1 },
- emptyHit: { flex: 1, minHeight: 10 },
+ emptyHit: { flex: 1, minHeight: 24, justifyContent: 'flex-end' },
+ emptyHitText: { position: 'absolute', width: 1, height: 1, opacity: 0 },
 });
