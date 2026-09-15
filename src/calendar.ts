@@ -3,7 +3,8 @@ import { Platform } from 'react-native';
 import { makeCalendarWriter, type Plan } from './model';
 import { saveLink } from './store';
 import { GOOGLE_CALENDAR_SETUP_HINT, isGoogleCalendar, preferFamilyThenGoogleCalendars, resolveGoogleCalendarEmbedUrl } from './calendarDetect';
-export type DeviceEvent = { id: string; calendarId: string; title: string; start: string; end: string; location: string; notes: string; calendarTitle: string };
+import { isAllDayRange } from './monthGrid';
+export type DeviceEvent = { id: string; calendarId: string; title: string; start: string; end: string; location: string; notes: string; calendarTitle: string; allDay: boolean };
 export type GoogleMonth = { access: 'granted' | 'denied' | 'unavailable'; events: DeviceEvent[]; hasGoogleCalendar: boolean };
 function asIso(value: unknown): string {
  if (value instanceof Date) return Number.isFinite(value.getTime()) ? value.toISOString() : '';
@@ -20,20 +21,27 @@ export async function calendars(){
  if(!writable.length) throw new Error('No writable calendar was found. Set up a calendar account in the Calendar app, then try again. '+GOOGLE_CALENDAR_SETUP_HINT);
  return preferFamilyThenGoogleCalendars(writable, resolveGoogleCalendarEmbedUrl(process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_EMBED_URL));
 }
-export async function googleMonthEvents(start: Date, end: Date): Promise<GoogleMonth> {
+export async function googleMonthEvents(start: Date, end: Date, options?: { request?: boolean }): Promise<GoogleMonth> {
  if(Platform.OS==='web') return {access:'unavailable',events:[],hasGoogleCalendar:false};
  let permission=await Calendar.getCalendarPermissionsAsync();
- if(permission.status!=='granted') permission=await Calendar.requestCalendarPermissionsAsync();
+ if(permission.status!=='granted'){
+  if(options?.request===false) return {access:'denied',events:[],hasGoogleCalendar:false};
+  permission=await Calendar.requestCalendarPermissionsAsync();
+ }
  if(permission.status!=='granted') return {access:'denied',events:[],hasGoogleCalendar:false};
  const all=await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
  const google=all.filter(isGoogleCalendar);
  if(!google.length) return {access:'granted',events:[],hasGoogleCalendar:false};
  const titles=new Map(google.map(c=>[c.id,c.title]));
  const raw=await Calendar.getEventsAsync(google.map(c=>c.id),start,end);
- return {access:'granted',hasGoogleCalendar:true,events:raw.map(event=>({
-  id:event.id,calendarId:event.calendarId,title:event.title?.trim()||'Busy',start:asIso(event.startDate),end:asIso(event.endDate),
-  location:event.location||'',notes:event.notes||'',calendarTitle:titles.get(event.calendarId)||'Google',
- })).filter(event=>event.id&&event.start).sort((a,b)=>a.start.localeCompare(b.start))};
+ return {access:'granted',hasGoogleCalendar:true,events:raw.map(event=>{
+  const startIso=asIso(event.startDate); const endIso=asIso(event.endDate);
+  return {
+   id:event.id,calendarId:event.calendarId,title:event.title?.trim()||'Busy',start:startIso,end:endIso,
+   location:event.location||'',notes:event.notes||'',calendarTitle:titles.get(event.calendarId)||'Google',
+   allDay:!!event.allDay||isAllDayRange(startIso,endIso),
+  };
+ }).filter(event=>event.id&&event.start).sort((a,b)=>a.start.localeCompare(b.start))};
 }
 export async function linkedEvent(id:string){
  // Query errors are deliberately propagated: never create a duplicate after an uncertain read.
