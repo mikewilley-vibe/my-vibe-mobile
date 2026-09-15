@@ -8,6 +8,10 @@ export type UvaGame = {
   result?: 'win' | 'loss' | 'pending' | string;
   note?: string;
   sourceUrl?: string;
+  sport?: string;
+  venue?: string;
+  network?: string;
+  timeUnknown?: boolean;
 };
 export type UvaNext = {sport: UvaSport; game: UvaGame};
 export const UPCOMING_LIMIT = 5;
@@ -48,6 +52,12 @@ export function parseUvaGames(body: unknown): UvaGame[] {
     const location: UvaLocation = loc === 'home' || loc === 'away' ? loc : 'neutral';
     const opponent = g.opponent.replace(/^vs\.?\s+/i, '').replace(/^at\s+/i, '').trim() || 'Opponent TBA';
     const result = normalizeUvaResult(g.result);
+    const rawDate = g.date.trim();
+    const venue = optionalText(g.venue) ?? venueFromNote(typeof g.note === 'string' ? g.note : undefined);
+    const network = optionalText(g.network) ?? optionalText(g.tv) ?? optionalText(g.broadcast);
+    const timeUnknown = g.timeUnknown === true || g.kickoffTbd === true || g.tba === true
+      || /^\d{4}-\d{2}-\d{2}$/.test(rawDate)
+      || !hasKnownKickoff(rawDate);
     out.push({
       id: g.id,
       opponent,
@@ -56,6 +66,10 @@ export function parseUvaGames(body: unknown): UvaGame[] {
       ...(result ? {result} : {}),
       note: typeof g.note === 'string' && g.note.trim() ? g.note : undefined,
       sourceUrl: typeof g.sourceUrl === 'string' && g.sourceUrl.trim() ? g.sourceUrl : undefined,
+      sport: optionalText(g.sport),
+      ...(venue ? {venue} : {}),
+      ...(network ? {network} : {}),
+      ...(timeUnknown ? {timeUnknown: true} : {}),
     });
   }
   return out;
@@ -90,12 +104,12 @@ export function nextUp(football: UvaGame[], basketball: UvaGame[], now = Date.no
 export function formatUvaWhen(iso: string) {
   const dt = new Date(iso);
   if (Number.isNaN(dt.getTime())) return 'TBD';
+  const withTime = hasKnownKickoff(iso);
   return dt.toLocaleString('en-US', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
+    ...(withTime ? { hour: 'numeric', minute: '2-digit' } : {}),
     timeZone: 'America/New_York',
   });
 }
@@ -107,6 +121,35 @@ export function locationLabel(location: UvaLocation) {
 }
 
 export function planLocation(game: UvaGame) {
-  const fromNote = game.note?.replace(/^Location:\s*/i, '').trim();
-  return fromNote || locationLabel(game.location);
+  return game.venue || game.note?.replace(/^Location:\s*/i, '').trim() || locationLabel(game.location);
+}
+
+function optionalText(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
+function venueFromNote(note?: string): string | undefined {
+  const fromNote = note?.replace(/^Location:\s*/i, '').trim();
+  return fromNote || undefined;
+}
+
+/** True when the timestamp has a real kickoff (not date-only / midnight Eastern). */
+export function hasKnownKickoff(iso: string, timeZone = 'America/New_York'): boolean {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso.trim())) return false;
+  const date = new Date(iso);
+  if (!Number.isFinite(date.getTime())) return false;
+  const parts = new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: 'numeric',
+    hourCycle: 'h23',
+    timeZone,
+  }).formatToParts(date);
+  const hour = Number(parts.find(part => part.type === 'hour')?.value);
+  const minute = Number(parts.find(part => part.type === 'minute')?.value);
+  return !(hour === 0 && minute === 0);
+}
+
+export function uvaHeadline(game: UvaGame): string {
+  const vs = game.location === 'away' ? 'at' : 'vs';
+  return `UVA ${vs} ${game.opponent}`;
 }

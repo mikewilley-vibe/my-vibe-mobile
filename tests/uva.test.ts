@@ -128,6 +128,12 @@ test('UVA game times render in Eastern time like the web page',()=>{
  assert.match(formatUvaWhen('2026-09-19T23:30:00.000Z'),/7:30/);
 });
 
+test('unknown kickoffs omit a clock time',()=>{
+ const label=formatUvaWhen('2026-12-29T05:00:00.000Z');
+ assert.match(label,/Dec 29/);
+ assert.doesNotMatch(label,/\d:\d{2}/);
+});
+
 test('location chips match the web HOME/AWAY labels',()=>{
  assert.equal(locationLabel('home'),'HOME');
  assert.equal(locationLabel('away'),'AWAY');

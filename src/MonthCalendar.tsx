@@ -17,10 +17,26 @@ const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function chipLabel(event: MonthEvent, detailed: boolean): string {
- if (event.allDay) return event.title;
+ const title = event.chipTitle || event.title;
+ if (event.allDay || event.timeUnknown) return title;
  const time = compactTime(event.start);
- const label = time ? `${time} ${event.title}` : event.title;
+ const label = time ? `${time} ${title}` : title;
  return detailed && event.location ? `${label} · ${event.location}` : label;
+}
+
+function chipStyle(event: MonthEvent) {
+ if (event.source === 'google') return [calendarStyles.chip, event.allDay && calendarStyles.chipGoogleAllDay, !event.allDay && calendarStyles.chipGoogle];
+ if (event.source === 'uva-sports') return [calendarStyles.chip, event.allDay && calendarStyles.chipUvaAllDay, !event.allDay && calendarStyles.chipUva];
+ if (event.source === 'showsignal') return [calendarStyles.chip, event.allDay && calendarStyles.chipShowAllDay, !event.allDay && calendarStyles.chipShow];
+ if (event.source === 'sweatshift') return [calendarStyles.chip, event.allDay && calendarStyles.chipSweatAllDay, !event.allDay && calendarStyles.chipSweat];
+ return [calendarStyles.chip, event.allDay && calendarStyles.chipAllDay];
+}
+
+function chipTextStyle(event: MonthEvent) {
+ const onColor = event.allDay && (event.source === 'google' || event.source === 'uva-sports' || event.source === 'personal' || event.source === 'showsignal' || event.source === 'sweatshift');
+ if (event.source === 'google' && !event.allDay) return [calendarStyles.chipText, calendarStyles.chipTextGoogle];
+ if (event.source === 'uva-sports' && !event.allDay) return [calendarStyles.chipText, calendarStyles.chipTextUva];
+ return [calendarStyles.chipText, onColor && calendarStyles.chipTextAllDay];
 }
 
 function DayCell({
@@ -77,20 +93,11 @@ function DayCell({
     <Pressable
      key={event.key}
      accessibilityRole="button"
-     accessibilityLabel={`${event.kind === 'plan' ? 'My Vibe plan' : 'Google event'} ${chipLabel(event, false)}`}
+     accessibilityLabel={`${event.source} ${chipLabel(event, false)}`}
      onPress={() => onEvent(event)}
-     style={[
-      calendarStyles.chip,
-      event.allDay && calendarStyles.chipAllDay,
-      event.kind === 'google' && calendarStyles.chipGoogle,
-      event.allDay && event.kind === 'google' && calendarStyles.chipGoogleAllDay,
-     ]}
+     style={chipStyle(event)}
     >
-     <Text numberOfLines={detailed ? 2 : 1} style={[
-      calendarStyles.chipText,
-      event.allDay && calendarStyles.chipTextAllDay,
-      event.kind === 'google' && !event.allDay && calendarStyles.chipTextGoogle,
-     ]}>{chipLabel(event, detailed)}</Text>
+     <Text numberOfLines={detailed ? 2 : 1} style={chipTextStyle(event)}>{chipLabel(event, detailed)}</Text>
     </Pressable>
    ))}
    {layout.overflowCount > 0 && (
@@ -272,9 +279,16 @@ const calendarStyles = StyleSheet.create({
  chipAllDay: { backgroundColor: colors.harbor, borderLeftWidth: 0 },
  chipGoogle: { backgroundColor: 'rgba(196,92,38,0.14)', borderLeftColor: colors.signal },
  chipGoogleAllDay: { backgroundColor: colors.signal, borderLeftWidth: 0 },
+ chipUva: { backgroundColor: 'rgba(35,45,75,0.14)', borderLeftColor: colors.uvaBlue },
+ chipUvaAllDay: { backgroundColor: colors.uvaBlue, borderLeftWidth: 0 },
+ chipShow: { backgroundColor: 'rgba(124,58,107,0.14)', borderLeftColor: '#7c3a6b' },
+ chipShowAllDay: { backgroundColor: '#7c3a6b', borderLeftWidth: 0 },
+ chipSweat: { backgroundColor: 'rgba(46,125,107,0.14)', borderLeftColor: '#2e7d6b' },
+ chipSweatAllDay: { backgroundColor: '#2e7d6b', borderLeftWidth: 0 },
  chipText: { fontSize: 10, lineHeight: 13, color: colors.ink, fontWeight: '600' },
  chipTextAllDay: { color: 'white' },
  chipTextGoogle: { color: colors.ink },
+ chipTextUva: { color: colors.uvaBlue },
  more: { fontSize: 10, fontWeight: '700', color: colors.muted, paddingHorizontal: 2, paddingVertical: 1 },
  emptyHit: { flex: 1, minHeight: 24, justifyContent: 'flex-end' },
  emptyHitText: { position: 'absolute', width: 1, height: 1, opacity: 0 },

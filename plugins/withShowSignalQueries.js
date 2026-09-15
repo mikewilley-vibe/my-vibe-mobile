@@ -1,18 +1,22 @@
 const { withAndroidManifest } = require('expo/config-plugins');
 
 /**
- * Lets Linking.canOpenURL see the ShowSignal custom scheme on Android 11+.
+ * Lets Linking.canOpenURL see sibling-app custom schemes on Android 11+.
  */
+const QUERY_SCHEMES = ['showsignal', 'workouttimermobile'];
+
 function withShowSignalQueries(config) {
   return withAndroidManifest(config, (cfg) => {
     const manifest = cfg.modResults.manifest;
     const queries = Array.isArray(manifest.queries) ? manifest.queries : [];
-    if (!JSON.stringify(queries).includes('showsignal')) {
+    const encoded = JSON.stringify(queries);
+    for (const scheme of QUERY_SCHEMES) {
+      if (encoded.includes(scheme)) continue;
       queries.push({
         intent: [
           {
             action: [{ $: { 'android:name': 'android.intent.action.VIEW' } }],
-            data: [{ $: { 'android:scheme': 'showsignal' } }],
+            data: [{ $: { 'android:scheme': scheme } }],
           },
         ],
       });

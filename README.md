@@ -25,11 +25,12 @@ Xcode is installed on this Mac. This Codex session could not connect to CoreSimu
 
 ## First useful screens
 
-Cold start opens **My calendar** in **Month** (the public Google family calendar, website-like embed). Agenda, Home, Shows, and UVA stay in the tab bar.
+Cold start opens **Home** on the native month-at-a-glance calendar (the hero). My calendar, Shows, UVA, and My Projects stay in the tab bar.
 
-- **My calendar:** first tab; opens on **Month** (`mode=MONTH` Google family calendar embed, same look as mikewilley.app). **Agenda** is a secondary toggle for the quick list. **+ Create a plan** still adds to My Vibe and can export to the family Google calendar.
-- **Home:** native My Vibe branding, upcoming saved plans, Shows, and remaining personal shortcuts (HIIT Timer, family calendar & school links).
-- **UVA:** native football and basketball upcoming games and recent W/L results from the existing `/api/uva/football` and `/api/uva` feeds (next up, next five per sport, recent results, HOME/AWAY). Add an upcoming game to My Vibe from a game card.
+- **Home:** native month grid of My Vibe plans, Google events, saved ShowSignal shows, and UVA sports. Compact source chips under the grid toggle visibility. Apps and projects are **not** listed here.
+- **My calendar:** **Month** (`mode=MONTH` Google family calendar embed, same look as mikewilley.app). **Agenda** is a secondary toggle for the quick list. **+ Create a plan** still adds to My Vibe and can export to the family Google calendar.
+- **My Projects:** portfolio cards plus a small **My Apps** strip (ShowSignal, SweatShift, HapsHere). Add a project in `src/projects.ts`. See `INTEGRATIONS.md` for deferred URLs/APIs.
+- **UVA:** native football and men's basketball upcoming games and recent W/L results from the existing `/api/uva/football` and `/api/uva` feeds (next up, next five per sport, recent results, HOME/AWAY). The same feeds overlay onto Home. Add an upcoming game to My Vibe from a game card.
 - **Shows:** real upcoming concerts from ShowSignal’s production Ticketmaster API; Hampton Roads, Richmond, and DC filters; original venue list; ticket links; save a show as a plan; **Open in ShowSignal** opens that concert in the ShowSignal app (`showsignal://concert/{id}`), or the ShowSignal website if the app isn’t installed.
 - **Plan details:** title, native date/time pickers, location and notes; separate local save and device-calendar export; **Add to Calendar** prefers the family Google calendar that matches the Month/Agenda embed, with a one-tap “Add to Family Google calendar” action when the match is clear; permissions/settings handling; verified “In Calendar” state.
 

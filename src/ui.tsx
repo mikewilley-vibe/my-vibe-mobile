@@ -8,6 +8,19 @@ export function Button({title,onPress,disabled=false}:{title:string;onPress:()=>
 export function Card({children}:{children:ReactNode}){return <View style={styles.card}>{children}</View>}
 export function problem(error:unknown){Alert.alert('My Vibe',error instanceof Error?error.message:'Something went wrong. Please try again.');}
 export async function openLink(url:string){try{if(!/^https?:\/\//i.test(url)) throw new Error('This link is not supported.');await Linking.openURL(url);}catch(e){problem(e)}}
+export async function openAppOrWeb(schemeUrl:string|undefined, webUrl:string|undefined, missingMessage:string){
+ try{
+  if(schemeUrl){
+   let canOpen=false;
+   try{canOpen=await Linking.canOpenURL(schemeUrl);}catch{canOpen=false;}
+   if(canOpen){
+    try{await Linking.openURL(schemeUrl);return;}catch{/* Fall through to https. */}
+   }
+  }
+  if(webUrl && /^https?:\/\//i.test(webUrl)){await Linking.openURL(webUrl);return;}
+  problem(new Error(missingMessage));
+ }catch(e){problem(e)}
+}
 export async function openInShowSignal(id:string){
  const trimmed=id.trim();
  if(!trimmed){problem(new Error('This show is missing a ShowSignal link.'));return;}

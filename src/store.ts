@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
 import { validatePlan, type Plan } from './model';
+import { hydrateCalendarSources } from './calendarSources.ts';
 type Data = { plans: Plan[]; links: Record<string,string> };
 const KEY='my-vibe:v1';
 let data: Data={plans:[],links:{}};
@@ -16,6 +17,7 @@ export async function hydrate(){
   parsed.plans.forEach(validatePlan);
   data=parsed;
  }
+ await hydrateCalendarSources();
  ready=true;notify();
 }
 function change(fn:(d:Data)=>Data){
