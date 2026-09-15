@@ -26,7 +26,7 @@ Xcode is installed on this Mac. This Codex session could not connect to CoreSimu
 ## First useful screens
 
 - **Home:** native My Vibe branding, upcoming saved plans, Shows, and remaining personal shortcuts (HIIT Timer, family calendar & school links).
-- **UVA:** native football and basketball upcoming games from the existing `/api/uva/football` and `/api/uva` feeds (next up, next five per sport, HOME/AWAY).
+- **UVA:** native football and basketball upcoming games and recent W/L results from the existing `/api/uva/football` and `/api/uva` feeds (next up, next five per sport, recent results, HOME/AWAY). Add an upcoming game to My Vibe from a game card.
 - **Shows:** real upcoming concerts from ShowSignal’s production Ticketmaster API; Hampton Roads, Richmond, and DC filters; original venue list; ticket links; save a show as a plan; **Open in ShowSignal** opens that concert in the ShowSignal app (`showsignal://concert/{id}`), or the ShowSignal website if the app isn’t installed.
 - **My calendar:** opens on **Agenda** (the public Google family calendar) when an embed URL is configured; Month is a secondary toggle for saved My Vibe plans and Google events already on the device; custom plans, editing and removal.
 - **Plan details:** title, native date/time pickers, location and notes; separate local save and device-calendar export; **Add to Calendar** prefers the family Google calendar that matches the Agenda embed, with a one-tap “Add to Family Google calendar” action when the match is clear; permissions/settings handling; verified “In Calendar” state.
