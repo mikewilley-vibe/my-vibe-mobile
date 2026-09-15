@@ -3,52 +3,45 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { router, useFocusEffect } from 'expo-router';
 import { useData } from '../../src/store';
 import { googleMonthEvents, openCalendar, type DeviceEvent } from '../../src/calendar';
-import { isMyVibeDeviceEvent } from '../../src/calendarDetect';
 import { MonthCalendar } from '../../src/MonthCalendar';
 import {
  compareMonthEvents,
  dateFromDayKey,
  dayKey,
  eventOverlapsLocalDay,
- isAllDayRange,
  planStartForDate,
  startOfMonth,
  visibleMonthRange,
  type MonthEvent,
 } from '../../src/monthGrid';
+import { getUvaSchedule } from '../../src/api';
+import {
+ CALENDAR_SOURCES,
+ eventDetailLines,
+ mergeCalendarEvents,
+ setSourceEnabled,
+ sourceLabel,
+ useSourceEnabled,
+} from '../../src/calendarSources';
+import { getSweatShiftWorkouts, type SweatShiftWorkout } from '../../src/sweatshift';
+import type { UvaSportId } from '../../src/uvaSports';
+import type { UvaGame } from '../../src/uva';
 import { Button, Card, colors, styles, when } from '../../src/ui';
 
-function toPlanEvent(plan: { id: string; title: string; start: string; end: string; location: string }): MonthEvent {
- return {
-  key: 'plan:' + plan.id,
-  title: plan.title,
-  start: plan.start,
-  end: plan.end,
-  allDay: isAllDayRange(plan.start, plan.end),
-  kind: 'plan',
-  planId: plan.id,
-  location: plan.location,
- };
-}
-
-function toGoogleEvent(event: DeviceEvent): MonthEvent {
- return {
-  key: 'google:' + event.id,
-  title: event.title,
-  start: event.start,
-  end: event.end,
-  allDay: event.allDay || isAllDayRange(event.start, event.end),
-  kind: 'google',
-  googleId: event.id,
-  location: event.location || event.calendarTitle,
- };
+function whenLabel(event: MonthEvent): string {
+ if (event.timeUnknown) return 'Time TBA';
+ if (event.allDay) return 'All day';
+ return when(event.start);
 }
 
 export default function Home() {
  const { plans, links } = useData();
+ const enabledSources = useSourceEnabled();
  const [month, setMonth] = useState(() => startOfMonth(new Date()));
  const [selected, setSelected] = useState<string | null>(() => dayKey(new Date()));
  const [googleEvents, setGoogleEvents] = useState<DeviceEvent[]>([]);
+ const [uvaBySport, setUvaBySport] = useState<Partial<Record<UvaSportId, UvaGame[]>>>({});
+ const [sweatshiftWorkouts, setSweatshiftWorkouts] = useState<SweatShiftWorkout[]>([]);
 
  useFocusEffect(useCallback(() => {
   let active = true;
@@ -57,17 +50,28 @@ export default function Home() {
    if (!active) return;
    setGoogleEvents(result.access === 'granted' ? result.events : []);
   }).catch(() => { if (active) setGoogleEvents([]); });
+  void getUvaSchedule().then(data => {
+   if (!active) return;
+   setUvaBySport(data.bySport);
+  }).catch(() => { if (active) setUvaBySport({}); });
+  void getSweatShiftWorkouts().then(data => {
+   if (!active) return;
+   setSweatshiftWorkouts(data.workouts);
+  }).catch(() => { if (active) setSweatshiftWorkouts([]); });
   return () => { active = false; };
  }, [month]));
 
  const linkedIds = useMemo(() => new Set(Object.values(links)), [links]);
- const events = useMemo(() => {
-  const plansAsEvents = plans.map(toPlanEvent);
-  const googleAsEvents = googleEvents
-   .filter(event => !linkedIds.has(event.id) && !isMyVibeDeviceEvent(event.notes))
-   .map(toGoogleEvent);
-  return [...plansAsEvents, ...googleAsEvents];
- }, [plans, googleEvents, linkedIds]);
+ const range = useMemo(() => visibleMonthRange(month), [month]);
+ const events = useMemo(() => mergeCalendarEvents({
+  plans,
+  googleEvents,
+  linkedEventIds: linkedIds,
+  uvaBySport,
+  sweatshiftWorkouts,
+  range,
+  enabledSources,
+ }), [plans, googleEvents, linkedIds, uvaBySport, sweatshiftWorkouts, range, enabledSources]);
 
  const selectedDate = selected ? dateFromDayKey(selected) : null;
  const selectedEvents = selectedDate
@@ -79,8 +83,39 @@ export default function Home() {
   router.push({ pathname: '/plan', params: { start: planStartForDate(date) } });
  }
 
+ function openUvaEvent(event: MonthEvent) {
+  const details = [
+   whenLabel(event) === 'Time TBA' ? undefined : whenLabel(event) === 'All day' ? undefined : whenLabel(event),
+   ...eventDetailLines(event),
+   event.timeUnknown ? 'Start time TBA' : undefined,
+  ].filter(Boolean).join('\n');
+  const saved = event.planId ? plans.some(plan => plan.id === event.planId) : false;
+  const buttons: { text: string; onPress?: () => void }[] = [{ text: 'Close' }];
+  if (event.planId) {
+   buttons.push({
+    text: saved ? 'View plan' : 'Add to My Vibe',
+    onPress: () => router.push({
+     pathname: '/plan',
+     params: saved ? { id: event.planId } : {
+      id: event.planId,
+      title: event.title,
+      start: event.start,
+      location: event.venue || event.location || '',
+      url: event.externalUrl,
+     },
+    }),
+   });
+  }
+  buttons.push({ text: 'UVA tab', onPress: () => router.push('/uva') });
+  Alert.alert(event.title, details || 'UVA game', buttons);
+ }
+
  async function openEvent(event: MonthEvent) {
-  if (event.kind === 'plan' && event.planId) {
+  if (event.source === 'uva-sports') {
+   openUvaEvent(event);
+   return;
+  }
+  if (event.planId) {
    router.push({ pathname: '/plan', params: { id: event.planId } });
    return;
   }
@@ -111,17 +146,36 @@ export default function Home() {
     />
    </View>
    <ScrollView style={homeStyles.dayPane} contentContainerStyle={homeStyles.dayContent} keyboardShouldPersistTaps="handled">
+    <View style={homeStyles.sources} accessibilityRole="summary" accessibilityLabel="Calendar sources">
+     {CALENDAR_SOURCES.map(source => {
+      const on = enabledSources[source.id] !== false;
+      return (
+       <Pressable
+        key={source.id}
+        accessibilityRole="button"
+        accessibilityState={{ selected: on }}
+        accessibilityLabel={`${source.label}${on ? ', shown' : ', hidden'}. ${source.live ? '' : 'Not connected yet.'}`}
+        onPress={() => void setSourceEnabled(source.id, !on)}
+        style={[homeStyles.sourceChip, on ? homeStyles.sourceOn : homeStyles.sourceOff]}
+       >
+        <Text style={[homeStyles.sourceText, !on && homeStyles.sourceTextOff]}>{source.shortLabel}</Text>
+       </Pressable>
+      );
+     })}
+    </View>
     {selectedDate ? (
      <>
       <Text style={styles.heading}>{selectedDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</Text>
       {selectedEvents.length ? selectedEvents.map(item => (
        <Card key={item.key}>
-        <Text style={styles.eyebrow}>{item.allDay ? 'All day' : when(item.start)} · {item.kind === 'plan' ? 'My Vibe' : 'Google'}</Text>
+        <Text style={styles.eyebrow}>{whenLabel(item)} · {sourceLabel(item.source)}</Text>
         <Text style={styles.heading}>{item.title}</Text>
-        {!!item.location && <Text style={styles.body}>{item.location}</Text>}
-        {item.kind === 'plan'
-         ? <Button title="View plan" onPress={() => router.push({ pathname: '/plan', params: { id: item.planId } })} />
-         : <Button title="Open in Calendar" onPress={() => void openEvent(item)} />}
+        {eventDetailLines(item).map(line => <Text key={line} style={styles.body}>{line}</Text>)}
+        {item.source === 'uva-sports'
+         ? <Button title="Game details" onPress={() => openUvaEvent(item)} />
+         : item.planId
+          ? <Button title="View plan" onPress={() => router.push({ pathname: '/plan', params: { id: item.planId } })} />
+          : <Button title="Open in Calendar" onPress={() => void openEvent(item)} />}
        </Card>
       )) : <Text style={styles.body}>Nothing planned yet. Tap below to make something for this day.</Text>}
       <Button title="+ Plan for this day" onPress={() => createFor(selectedDate)} />
@@ -144,5 +198,10 @@ const homeStyles = StyleSheet.create({
  addBtnText: { color: 'white', fontSize: 15, fontWeight: '600' },
  dayPane: { flex: 1, minHeight: 140 },
  dayContent: { paddingHorizontal: 12, paddingTop: 10, paddingBottom: 24, gap: 12 },
+ sources: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+ sourceChip: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1 },
+ sourceOn: { backgroundColor: 'white', borderColor: colors.harbor },
+ sourceOff: { backgroundColor: colors.fog, borderColor: colors.fog },
+ sourceText: { fontSize: 12, fontWeight: '700', color: colors.harbor },
+ sourceTextOff: { color: colors.muted },
 });
-

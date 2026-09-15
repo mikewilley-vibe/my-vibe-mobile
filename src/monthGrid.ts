@@ -1,4 +1,4 @@
-export type MonthEventKind = 'plan' | 'google';
+export type CalendarSourceId = 'personal' | 'google' | 'showsignal' | 'uva-sports' | 'sweatshift';
 
 export type MonthEvent = {
  key: string;
@@ -6,10 +6,17 @@ export type MonthEvent = {
  start: string;
  end: string;
  allDay: boolean;
- kind: MonthEventKind;
+ source: CalendarSourceId;
  planId?: string;
  googleId?: string;
  location?: string;
+ timeUnknown?: boolean;
+ sportLabel?: string;
+ network?: string;
+ venue?: string;
+ homeAway?: 'home' | 'away' | 'neutral';
+ externalUrl?: string;
+ chipTitle?: string;
 };
 
 export type MonthCell = {
@@ -96,11 +103,19 @@ export function eventOverlapsLocalDay(startIso: string, endIso: string, day: Dat
  return start < dayEnd && end > dayStart;
 }
 
+const SOURCE_RANK: Record<CalendarSourceId, number> = {
+ personal: 0,
+ google: 1,
+ showsignal: 2,
+ 'uva-sports': 3,
+ sweatshift: 4,
+};
+
 export function compareMonthEvents(a: MonthEvent, b: MonthEvent): number {
  if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
  const start = a.start.localeCompare(b.start);
  if (start) return start;
- if (a.kind !== b.kind) return a.kind === 'plan' ? -1 : 1;
+ if (a.source !== b.source) return SOURCE_RANK[a.source] - SOURCE_RANK[b.source];
  return a.title.localeCompare(b.title) || a.key.localeCompare(b.key);
 }
 

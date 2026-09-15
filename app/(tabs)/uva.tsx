@@ -2,7 +2,7 @@ import { useCallback,useEffect,useState } from 'react';
 import { ActivityIndicator,Text,View } from 'react-native';
 import { router } from 'expo-router';
 import { BASE,getUvaSchedule } from '../../src/api';
-import { formatUvaWhen,locationLabel,nextUp,planLocation,recentResults,resultLabel,upcomingGames,type UvaGame } from '../../src/uva';
+import { formatUvaWhen,locationLabel,nextUp,planLocation,recentResults,resultLabel,upcomingGames,uvaHeadline,type UvaGame } from '../../src/uva';
 import { useData } from '../../src/store';
 import { Button,Card,Page,colors,openLink,styles } from '../../src/ui';
 
@@ -18,7 +18,7 @@ function resultChip(result?:string){
  return <Chip label={label} background={background} accessibilityLabel={spoken}/>;
 }
 
-function GameCard({game,sport,next}:{game:UvaGame;sport:string;next?:boolean}){
+function GameCard({game,next}:{game:UvaGame;next?:boolean}){
  const {plans}=useData();
  const loc=locationLabel(game.location);
  const planId='uva:'+game.id;
@@ -29,9 +29,9 @@ function GameCard({game,sport,next}:{game:UvaGame;sport:string;next?:boolean}){
    <Text style={styles.eyebrow}>{formatUvaWhen(game.date)}</Text>
    {loc?<Chip label={loc} background={game.location==='home'?colors.uvaBlue:colors.uvaOrange}/>:null}
   </View>
-  <Text style={[styles.heading,{color:colors.uvaBlue}]}>vs {game.opponent}</Text>
+  <Text style={[styles.heading,{color:colors.uvaBlue}]}>{uvaHeadline(game)}</Text>
   {!!game.note&&<Text style={styles.body}>{game.note}</Text>}
-  <Button title={saved?'View saved plan':'Add to My Vibe'} onPress={()=>router.push({pathname:'/plan',params:{id:planId,title:`UVA ${sport} vs ${game.opponent}`,start:game.date,location:planLocation(game),url:game.sourceUrl}})}/>
+  <Button title={saved?'View saved plan':'Add to My Vibe'} onPress={()=>router.push({pathname:'/plan',params:{id:planId,title:uvaHeadline(game),start:game.date,location:planLocation(game),url:game.sourceUrl}})}/>
   {!!game.sourceUrl&&<Button title="Game details ↗" onPress={()=>void openLink(game.sourceUrl!)}/>}
  </Card>;
 }
@@ -44,7 +44,7 @@ function ResultCard({game}:{game:UvaGame}){
    <Text style={styles.eyebrow}>{formatUvaWhen(game.date)}</Text>
    {loc?<Chip label={loc} background={game.location==='home'?colors.uvaBlue:colors.uvaOrange}/>:null}
   </View>
-  <Text style={[styles.heading,{color:colors.uvaBlue}]}>vs {game.opponent}</Text>
+  <Text style={[styles.heading,{color:colors.uvaBlue}]}>{uvaHeadline(game)}</Text>
   {!!game.note&&<Text style={styles.body}>{game.note}</Text>}
  </Card>;
 }
@@ -60,7 +60,7 @@ function SportSection({label,games}:{label:string;games:UvaGame[]}){
    </View>
    <Text style={styles.body}>{upcoming.length} shown</Text>
   </View>
-  {upcoming.length?upcoming.map((game,i)=><GameCard key={game.id} game={game} sport={label} next={i===0}/>):<Text style={styles.body}>No upcoming games found.</Text>}
+  {upcoming.length?upcoming.map((game,i)=><GameCard key={game.id} game={game} next={i===0}/>):<Text style={styles.body}>No upcoming games found.</Text>}
   <View style={styles.row}>
    <View style={{flex:1,gap:4}}>
     <Text style={[styles.heading,{color:colors.uvaBlue}]}>Recent results</Text>
@@ -81,7 +81,7 @@ export default function UVA(){
  const load=useCallback((mode:'initial'|'refresh')=>{
   if(mode==='initial'){setLoading(true);setError('');}
   else setRefreshing(true);
-  getUvaSchedule().then(data=>{setFootball(data.football);setBasketball(data.basketball);setError('');}).catch(e=>setError(e instanceof Error?e.message:'UVA schedule could not load. Try again in a moment.')).finally(()=>{setLoading(false);setRefreshing(false);});
+  getUvaSchedule({force:mode==='refresh'}).then(data=>{setFootball(data.football);setBasketball(data.basketball);setError('');}).catch(e=>setError(e instanceof Error?e.message:'UVA schedule could not load. Try again in a moment.')).finally(()=>{setLoading(false);setRefreshing(false);});
  },[]);
 
  useEffect(()=>{load('initial');},[load]);
@@ -91,13 +91,13 @@ export default function UVA(){
  return <Page refreshing={refreshing} onRefresh={()=>load('refresh')}>
   <Text style={[styles.eyebrow,{color:colors.uvaOrange}]}>ATHLETICS</Text>
   <Text style={[styles.title,{color:colors.uvaBlue}]}>UVA Schedule</Text>
-  <Text style={styles.body}>{next?`Next up (${next.sport}): vs ${next.game.opponent}`:'Upcoming games and recent results'}</Text>
+  <Text style={styles.body}>{next?`Next up (${next.sport === 'Basketball' ? "Men's Basketball" : next.sport}): ${uvaHeadline(next.game)}`:'Upcoming games and recent results'}</Text>
   {loading&&<ActivityIndicator accessibilityLabel="Loading UVA schedule" color={colors.uvaBlue}/>}
   {!!error&&<Card><Text style={styles.body}>{error}</Text><Button title="Retry" onPress={()=>load('initial')}/><Button title="Open on the web ↗" onPress={()=>void openLink(`${BASE}/uva`)}/></Card>}
   {!loading&&!error&&empty&&<Card><Text style={styles.body}>UVA games are temporarily unavailable. Please try again in a few minutes.</Text><Button title="Retry" onPress={()=>load('initial')}/></Card>}
   {!loading&&!error&&!empty&&<>
    <SportSection label="Football" games={football}/>
-   <SportSection label="Basketball" games={basketball}/>
+   <SportSection label="Men's Basketball" games={basketball}/>
   </>}
  </Page>;
 }

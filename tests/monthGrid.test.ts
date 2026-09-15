@@ -19,7 +19,7 @@ import {
 } from '../src/monthGrid.ts';
 
 function event(partial: Partial<MonthEvent> & Pick<MonthEvent, 'key' | 'title' | 'start' | 'end'>): MonthEvent {
- return { allDay: false, kind: 'plan', ...partial };
+ return { allDay: false, source: 'personal', ...partial };
 }
 
 test('month grid is always six Sunday-start weeks with adjacent-month padding', () => {
@@ -161,7 +161,7 @@ test('phone cells keep at least two event slots; larger widths can show more', (
 test('all-day plans sort before timed events, then My Vibe before Google', () => {
  const timedPlan = event({ key: 'plan-timed', title: 'Dinner', start: '2026-09-15T22:00:00.000Z', end: '2026-09-15T23:00:00.000Z' });
  const allDay = event({ key: 'plan-all', title: 'Holiday', start: '2026-09-15T04:00:00.000Z', end: '2026-09-16T04:00:00.000Z', allDay: true });
- const google = event({ key: 'g', title: 'Dinner', start: '2026-09-15T22:00:00.000Z', end: '2026-09-15T23:00:00.000Z', kind: 'google' });
+ const google = event({ key: 'g', title: 'Dinner', start: '2026-09-15T22:00:00.000Z', end: '2026-09-15T23:00:00.000Z', source: 'google' });
  const ordered = [google, timedPlan, allDay].sort(compareMonthEvents);
  assert.deepEqual(ordered.map(item => item.key), ['plan-all', 'plan-timed', 'g']);
 });

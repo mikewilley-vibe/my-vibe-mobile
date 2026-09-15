@@ -14,7 +14,8 @@
         "NSCalendarsUsageDescription": "My Vibe can show Google calendar events on this device and adds only the plans you choose.",
         "ITSAppUsesNonExemptEncryption": false,
         "LSApplicationQueriesSchemes": [
-          "showsignal"
+          "showsignal",
+          "workouttimermobile"
         ]
       }
     },
