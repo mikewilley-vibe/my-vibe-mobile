@@ -1,13 +1,26 @@
 import type { Concert } from './reused/concert';
+import { concertsFromShowSignalEvents,eventsFromShowSignalBody,showSignalErrorMessage } from './showsignal';
 import { parseUvaGames, type UvaGame } from './uva';
 export const BASE=(process.env.EXPO_PUBLIC_API_BASE_URL || 'https://www.mikewilley.app').replace(/\/$/,'');
+export const SHOWSIGNAL_API_BASE=(process.env.EXPO_PUBLIC_SHOWSIGNAL_API_BASE_URL || 'https://concert-finder-eta.vercel.app').replace(/\/$/,'');
+const REGION_LOCATION={
+ Richmond:{latitude:37.5407,longitude:-77.4360,radiusMiles:60},
+ 'Hampton Roads':{latitude:36.8508,longitude:-76.2859,radiusMiles:60},
+ 'Washington DC':{latitude:38.9072,longitude:-77.0369,radiusMiles:60},
+} as const;
+const LOAD_ERROR='Shows could not load. Try again in a moment.';
 export async function getConcerts(region:'Richmond'|'Hampton Roads'|'Washington DC'):Promise<Concert[]> {
- const coords={'Richmond':'lat=37.5407&lon=-77.4360','Hampton Roads':'lat=36.8508&lon=-76.2859','Washington DC':'lat=38.9072&lon=-77.0369'};
- const response=await fetch(`${BASE}/api/concerts/local?${coords[region]}&radius=60&days=90`,{signal:AbortSignal.timeout(20000)});
- if(!response.ok) throw new Error('Shows could not load. Try again in a moment.');
- const body=await response.json();
- if(body.ok!==true||!Array.isArray(body.events)) throw new Error(body.error || 'The concert feed is unavailable.');
- return Array.from(new Map<string,Concert>((body.events as Concert[]).filter(e=>typeof e.id==='string'&&typeof e.name==='string'&&Number.isFinite(Date.parse(e.dateTime))&&Date.parse(e.dateTime)>=Date.now()).map(e=>[e.id,e])).values()).sort((a,b)=>a.dateTime.localeCompare(b.dateTime));
+ const response=await fetch(`${SHOWSIGNAL_API_BASE}/api/v1/ticketmaster/events`,{
+  method:'POST',
+  headers:{Accept:'application/json','Content-Type':'application/json'},
+  body:JSON.stringify({attractions:[],venues:[],location:REGION_LOCATION[region],pageSize:50}),
+  signal:AbortSignal.timeout(20000),
+ });
+ const body=await response.json().catch(()=>({}));
+ if(!response.ok) throw new Error(showSignalErrorMessage(body,LOAD_ERROR));
+ const events=eventsFromShowSignalBody(body);
+ if(!events) throw new Error(showSignalErrorMessage(body,'The concert feed is unavailable.'));
+ return concertsFromShowSignalEvents(events);
 }
 
 async function getUvaFeed(path:string):Promise<UvaGame[]> {

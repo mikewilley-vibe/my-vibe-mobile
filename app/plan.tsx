@@ -7,11 +7,12 @@ import { useData,savePlan,removePlan,getData } from '../src/store';
 import { calendars,status,writeCalendar,openCalendar } from '../src/calendar';
 import { calendarChoiceLabel,GOOGLE_CALENDAR_SETUP_HINT,isGoogleCalendar } from '../src/calendarDetect';
 import { validatePlan,type Plan } from '../src/model';
-import { Page,Card,Button,styles,when,problem } from '../src/ui';
+import { concertIdFromPlanId } from '../src/showsignal';
+import { Page,Card,Button,styles,when,problem,openInShowSignal } from '../src/ui';
 export default function Detail(){
  const params=useLocalSearchParams<{id?:string;title?:string;start?:string;location?:string;url?:string}>();
  const {plans,links}=useData();
- const [id]=useState(()=>params.id||'custom:'+randomUUID());const saved=plans.find(p=>p.id===id);
+ const [id]=useState(()=>params.id||'custom:'+randomUUID());const saved=plans.find(p=>p.id===id);const showSignalId=concertIdFromPlanId(id);
  const [draft,setDraft]=useState<Plan>(()=>saved||{id,title:params.title||'',start:params.start||new Date(Date.now()+3600000).toISOString(),end:new Date(Date.parse(params.start||new Date(Date.now()+3600000).toISOString())+7200000).toISOString(),location:params.location||'',notes:'',url:params.url});
  const [busy,setBusy]=useState(false);const [nativeStatus,setNativeStatus]=useState<'present'|'missing'|'unknown'>('unknown');
  const [choices,setChoices]=useState<Awaited<ReturnType<typeof calendars>>>([]);
@@ -33,6 +34,7 @@ export default function Detail(){
  <Text style={styles.heading}>Location</Text><TextInput accessibilityLabel="Location" style={styles.input} value={draft.location} editable={!locked&&!busy} onChangeText={v=>change('location',v)} placeholder="Venue or address"/>
  <Text style={styles.heading}>Notes</Text><TextInput accessibilityLabel="Notes" style={[styles.input,{minHeight:100}]} multiline value={draft.notes} editable={!locked&&!busy} onChangeText={v=>change('notes',v)} placeholder="Tickets, friends, things to remember"/>
  {!locked&&<Button title={busy?'Saving…':'Save to My Vibe'} disabled={busy} onPress={()=>void save()}/>}
+ {!!showSignalId&&<Button title="Open in ShowSignal ↗" disabled={busy} onPress={()=>void openInShowSignal(showSignalId)}/>}
  {nativeStatus==='present'&&linked?<Button title="✓ In Calendar · Open" disabled={busy} onPress={()=>void openCalendar(linked).catch(problem)}/>:<Button title={busy?'Please wait…':'Add to Calendar'} disabled={busy||locked} onPress={()=>void prepare()}/>}
  {!!choices.length&&<Card><Text style={styles.heading}>Choose a calendar</Text><Text style={styles.body}>{googleCount===1?'Your Google calendar is first — that’s usually the right one.':'Google calendars are listed first. Tap one to add this plan.'}</Text>{!googleCount&&<Text style={styles.body}>{GOOGLE_CALENDAR_SETUP_HINT}</Text>}{choices.map(c=><Button key={c.id} title={calendarChoiceLabel(c,{recommended:googleCount===1&&isGoogleCalendar(c)})} disabled={busy} onPress={()=>void add(c.id)}/>)}<Button title="Cancel" disabled={busy} onPress={()=>setChoices([])}/></Card>}
  {Platform.OS!=='web'&&<Button title="Calendar permission settings" onPress={()=>void Linking.openSettings().catch(problem)}/>}
