@@ -1,9 +1,2 @@
-import { Text,View } from 'react-native';
-import { router } from 'expo-router';
-import { useData } from '../../src/store';
-import { BASE } from '../../src/api';
-import { Page,Card,Button,styles,when,openLink } from '../../src/ui';
-export default function Home(){
- const {plans}=useData();const next=plans.filter(p=>Date.parse(p.end)>Date.now()).slice(0,3);
- return <Page><Text style={styles.eyebrow}>YOUR EVERYDAY, IN ONE PLACE</Text><Text style={styles.title}>My Vibe</Text><Text style={styles.body}>Good shows. Family plans. A little room for what’s next.</Text><Card><Text style={styles.heading}>Make a little time.</Text><Text style={styles.body}>Save something you’re looking forward to, then take it to your calendar.</Text><Button title="+ Create a plan" onPress={()=>router.push('/plan')}/></Card><Text style={styles.heading}>Coming up</Text>{next.length?next.map(p=><Card key={p.id}><Text style={styles.eyebrow}>{when(p.start)}</Text><Text style={styles.heading}>{p.title}</Text><Text style={styles.body}>{p.location}</Text><Button title="View plan" onPress={()=>router.push({pathname:'/plan',params:{id:p.id}})}/></Card>):<Text style={styles.body}>Your next good plan starts here. Browse a show or add your own.</Text>}<Card><Text style={styles.heading}>Find a show</Text><Text style={styles.body}>Hampton Roads, Richmond, and DC — the same ShowSignal concert feed.</Text><Button title="Browse shows" onPress={()=>router.push('/shows')}/></Card><Text style={styles.heading}>Your familiar places</Text><View style={{gap:10}}>{[['HIIT Timer',BASE+'/workout-timer'],['Family calendar & school links',BASE+'/#today']].map(([title,url])=><Button key={title} title={title+' ↗'} onPress={()=>void openLink(url)}/>)}</View><Text style={styles.body}>Saved plans stay on this device. Your family’s web calendar remains available above.</Text></Page>
-}
+import { Redirect } from 'expo-router';
+export default function Index(){return <Redirect href="/calendar"/>}
