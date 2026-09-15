@@ -54,7 +54,7 @@ export function projectDescription(project: Project): string {
 export function projectType(project: Project): ProjectType {
   if (project.type) return project.type;
   if (project.category === 'mobile') return 'ios-app';
-  if (project.category && project.category !== 'mobile') return project.category;
+  if (project.category) return project.category;
   return 'experiment';
 }
 
