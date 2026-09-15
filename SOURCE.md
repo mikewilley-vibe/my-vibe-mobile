@@ -14,7 +14,7 @@ Adapted into native components:
 - `app/globals.css`: paper, ink, muted, harbor, fog, signal palette.
 
 Reused without changing the server:
-- `/api/concerts/local` endpoint and Concert response contract.
-- `/api/uva` (basketball) and `/api/uva/football` schedule endpoints. The native UVA tab filters to the next five upcoming games per sport, matching `app/uva/page.tsx`.
+- ShowSignal `POST /api/v1/ticketmaster/events` (production `https://concert-finder-eta.vercel.app`), mapped to the existing Concert type.
+- `/api/uva` (basketball) and `/api/uva/football` schedule endpoints on mikewilley.app. The native UVA tab filters to the next five upcoming games per sport, matching `app/uva/page.tsx`.
 
 No server secret or Supabase service role credential is bundled.

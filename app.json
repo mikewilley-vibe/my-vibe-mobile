@@ -12,7 +12,10 @@
       "infoPlist": {
         "NSCalendarsFullAccessUsageDescription": "My Vibe can show Google calendar events on this device and adds only the plans you choose.",
         "NSCalendarsUsageDescription": "My Vibe can show Google calendar events on this device and adds only the plans you choose.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "LSApplicationQueriesSchemes": [
+          "showsignal"
+        ]
       }
     },
     "android": {
@@ -32,6 +35,7 @@
     },
     "plugins": [
       "./plugins/withIosMinDeployment",
+      "./plugins/withShowSignalQueries",
       "expo-router",
       [
         "expo-calendar",
