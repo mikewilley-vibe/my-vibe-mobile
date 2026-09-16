@@ -14,7 +14,7 @@ function FamilyEmbed({ src, reloadKey, label }: { src: string; reloadKey: number
  if (Platform.OS === 'web') {
   return createElement('iframe', { key: reloadKey, title: label, src, style: { border: 0, width: '100%', height: 720 }, referrerPolicy: 'no-referrer-when-downgrade' });
  }
- return <WebView key={reloadKey} accessibilityLabel={label} source={{ uri: src }} style={{ flex: 1, backgroundColor: 'white' }} startInLoadingState nestedScrollEnabled javaScriptEnabled renderLoading={() => <ActivityIndicator accessibilityLabel="Loading Google Calendar" color={colors.harbor} style={{ marginTop: 40 }} />} />;
+ return <WebView key={reloadKey} accessibilityLabel={label} source={{ uri: src }} style={{ flex: 1, backgroundColor: colors.surface }} startInLoadingState nestedScrollEnabled javaScriptEnabled renderLoading={() => <ActivityIndicator accessibilityLabel="Loading Google Calendar" color={colors.harbor} style={{ marginTop: 40 }} />} />;
 }
 
 export default function MyCalendar() {
@@ -49,7 +49,7 @@ export default function MyCalendar() {
     <Card>
      <Text style={styles.heading}>{view === 'month' ? 'Family month' : 'Family agenda'}</Text>
      <Text style={styles.body}>{view === 'month' ? 'Same month look as mikewilley.app — the public family calendar.' : 'Quick list of upcoming family Google calendar events.'}</Text>
-     <View style={{ height: 720, marginHorizontal: -20, marginBottom: -20, overflow: 'hidden', borderBottomLeftRadius: 20, borderBottomRightRadius: 20, borderTopWidth: 1, borderColor: colors.fog, backgroundColor: 'white' }}>
+     <View style={{ height: 720, marginHorizontal: -20, marginBottom: -20, overflow: 'hidden', borderBottomLeftRadius: 20, borderBottomRightRadius: 20, borderTopWidth: 1, borderColor: colors.fog, backgroundColor: colors.surface }}>
       <FamilyEmbed src={src} reloadKey={embedNonce} label={view === 'month' ? 'Google Calendar month' : 'Google Calendar agenda'} />
      </View>
     </Card>

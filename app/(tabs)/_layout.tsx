@@ -12,7 +12,7 @@ const TABS = [
 ] as const;
 
 export default function TabsLayout(){
- return <Tabs initialRouteName="calendar" screenOptions={{tabBarActiveTintColor:colors.harbor,headerStyle:{backgroundColor:colors.paper},headerTitleStyle:{color:colors.ink},tabBarStyle:{backgroundColor:'white'}}}>
+ return <Tabs initialRouteName="calendar" screenOptions={{tabBarActiveTintColor:colors.harbor,tabBarInactiveTintColor:colors.muted,headerStyle:{backgroundColor:colors.paper},headerTitleStyle:{color:colors.ink},tabBarStyle:{backgroundColor:colors.surface,borderTopColor:colors.fog}}}>
   {TABS.map(([name,title,icon])=><Tabs.Screen key={name} name={name} options={{title,tabBarIcon:({color})=><Text style={{fontSize:24,color}}>{icon}</Text>}}/>)}
   <Tabs.Screen name="index" options={{href:null}}/>
   <Tabs.Screen name="home" options={{href:null,title:'Home'}}/>
