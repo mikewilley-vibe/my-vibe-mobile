@@ -15,7 +15,15 @@ export const colors={
  accentFill:'rgba(180,74,36,0.14)',
  signal:'#c45c26',
  uvaBlue:'#232D4B',
- uvaOrange:'#F84C1E'
+ uvaOrange:'#F84C1E',
+ signalBlack:'#0c0b09',
+ signalLime:'#d8ff3e',
+ signalLimePressed:'#c2eb24',
+ signalCard:'#171512',
+ signalCardPressed:'#201c18',
+ signalMuted:'#a39a8c',
+ signalInk:'#f6f1e8',
+ signalLine:'#322e28'
 };
 export const styles=StyleSheet.create({
  page:{flex:1,backgroundColor:colors.paper},
@@ -38,7 +46,11 @@ export const styles=StyleSheet.create({
  input:{backgroundColor:colors.surface,borderWidth:1,borderColor:colors.fog,borderRadius:12,padding:14,fontSize:16,color:colors.ink,minHeight:48}
 });
 export function Page({children,refreshing=false,onRefresh}:{children:ReactNode;refreshing?:boolean;onRefresh?:()=>void}){return <ScrollView style={styles.page} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" refreshControl={onRefresh?<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.harbor} colors={[colors.harbor]}/>:undefined}>{children}</ScrollView>}
-export function Button({title,onPress,disabled=false}:{title:string;onPress:()=>void;disabled?:boolean}){return <Pressable accessibilityRole="button" accessibilityState={{disabled}} disabled={disabled} onPress={onPress} style={({pressed})=>[styles.button,disabled&&{opacity:0.5},pressed&&!disabled&&{backgroundColor:colors.pressed}]}><Text style={styles.buttonText}>{title}</Text></Pressable>}
+export function Button({title,onPress,disabled=false,variant='harbor'}:{title:string;onPress:()=>void;disabled?:boolean;variant?:'harbor'|'signal'|'signalOutline'}){
+ const lime=variant==='signal';
+ const outline=variant==='signalOutline';
+ return <Pressable accessibilityRole="button" accessibilityState={{disabled}} disabled={disabled} onPress={onPress} style={({pressed})=>[styles.button,lime&&{backgroundColor:colors.signalLime},outline&&{backgroundColor:colors.signalCard,borderWidth:1,borderColor:colors.signalLime},disabled&&{opacity:0.5},pressed&&!disabled&&(lime?{backgroundColor:colors.signalLimePressed}:outline?{backgroundColor:colors.signalCardPressed}:{backgroundColor:colors.pressed})]}><Text style={[styles.buttonText,lime&&{color:colors.signalBlack},outline&&{color:colors.signalLime}]}>{title}</Text></Pressable>;
+}
 export function Card({children}:{children:ReactNode}){return <View style={styles.card}>{children}</View>}
 export function problem(error:unknown){Alert.alert('My Vibe',error instanceof Error?error.message:'Something went wrong. Please try again.');}
 export async function openLink(url:string){try{if(!/^https?:\/\//i.test(url)) throw new Error('This link is not supported.');await Linking.openURL(url);}catch(e){problem(e)}}
