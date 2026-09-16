@@ -30,7 +30,7 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
-        "backgroundColor": "#F7F4EF",
+        "backgroundColor": "#F5F0E7",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       }
     },
@@ -61,7 +61,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F7F4EF"
+      "backgroundColor": "#F5F0E7"
     },
     "extra": {
       "router": {},
