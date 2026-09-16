@@ -2,22 +2,41 @@ import { ReactNode } from 'react';
 import { ScrollView,Text,Pressable,View,StyleSheet,Linking,Alert,RefreshControl } from 'react-native';
 import { showSignalConcertUrls } from './showsignal';
 export const colors={
- paper:'#F5F0E7',
- surface:'#FBF8F2',
- ink:'#A44722',
- muted:'#4B4038',
- harbor:'#A44722',
- pressed:'#863616',
- fog:'#DDD2C3',
- wash:'#EDE6D8',
- onAccent:'#FBF8F2',
- selectedFill:'rgba(164,71,34,0.12)',
- accentFill:'rgba(164,71,34,0.14)',
+ paper:'#F7F3EC',
+ surface:'#FFFDF9',
+ ink:'#292622',
+ muted:'#6B625A',
+ harbor:'#B44A24',
+ pressed:'#8E3A1C',
+ fog:'#DED7CE',
+ wash:'#F1E3D7',
+ onAccent:'#FFFDF9',
+ selectedFill:'rgba(180,74,36,0.12)',
+ accentFill:'rgba(180,74,36,0.14)',
  signal:'#c45c26',
  uvaBlue:'#232D4B',
  uvaOrange:'#F84C1E'
 };
-export const styles=StyleSheet.create({page:{flex:1,backgroundColor:colors.paper},content:{padding:22,paddingBottom:48,gap:18},eyebrow:{fontSize:12,fontWeight:'700',letterSpacing:2,color:colors.harbor},title:{fontSize:36,fontWeight:'700',color:colors.ink},heading:{fontSize:23,fontWeight:'600',color:colors.ink},body:{fontSize:16,lineHeight:24,color:colors.muted},card:{backgroundColor:colors.surface,borderRadius:20,padding:20,gap:12,borderWidth:1,borderColor:colors.fog},row:{flexDirection:'row',gap:10,flexWrap:'wrap',alignItems:'center'},button:{backgroundColor:colors.harbor,borderRadius:12,paddingHorizontal:18,paddingVertical:14,minHeight:48,alignItems:'center'},buttonText:{color:colors.onAccent,fontSize:16,fontWeight:'600'},input:{backgroundColor:colors.surface,borderWidth:1,borderColor:colors.fog,borderRadius:12,padding:14,fontSize:17,color:colors.ink,minHeight:50}});
+export const styles=StyleSheet.create({
+ page:{flex:1,backgroundColor:colors.paper},
+ content:{padding:16,paddingBottom:40,gap:12},
+ intro:{gap:4},
+ chrome:{gap:10},
+ eyebrow:{fontSize:11,fontWeight:'700',letterSpacing:1.6,color:colors.harbor},
+ title:{fontSize:22,fontWeight:'600',color:colors.ink,lineHeight:28},
+ heading:{fontSize:17,fontWeight:'600',color:colors.ink},
+ body:{fontSize:14,lineHeight:20,color:colors.muted},
+ lede:{fontSize:13,lineHeight:18,color:colors.muted},
+ card:{backgroundColor:colors.surface,borderRadius:20,padding:20,gap:10,borderWidth:1,borderColor:colors.fog},
+ row:{flexDirection:'row',gap:8,flexWrap:'wrap',alignItems:'center'},
+ button:{backgroundColor:colors.harbor,borderRadius:10,paddingHorizontal:16,paddingVertical:11,minHeight:44,alignItems:'center',justifyContent:'center'},
+ buttonText:{color:colors.onAccent,fontSize:15,fontWeight:'600'},
+ segment:{backgroundColor:colors.wash,borderRadius:10,paddingHorizontal:14,paddingVertical:8,minHeight:36,alignItems:'center',justifyContent:'center'},
+ segmentSelected:{backgroundColor:colors.harbor},
+ segmentText:{color:colors.ink,fontSize:14,fontWeight:'600'},
+ segmentTextSelected:{color:colors.onAccent},
+ input:{backgroundColor:colors.surface,borderWidth:1,borderColor:colors.fog,borderRadius:12,padding:14,fontSize:16,color:colors.ink,minHeight:48}
+});
 export function Page({children,refreshing=false,onRefresh}:{children:ReactNode;refreshing?:boolean;onRefresh?:()=>void}){return <ScrollView style={styles.page} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" refreshControl={onRefresh?<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.harbor} colors={[colors.harbor]}/>:undefined}>{children}</ScrollView>}
 export function Button({title,onPress,disabled=false}:{title:string;onPress:()=>void;disabled?:boolean}){return <Pressable accessibilityRole="button" accessibilityState={{disabled}} disabled={disabled} onPress={onPress} style={({pressed})=>[styles.button,disabled&&{opacity:0.5},pressed&&!disabled&&{backgroundColor:colors.pressed}]}><Text style={styles.buttonText}>{title}</Text></Pressable>}
 export function Card({children}:{children:ReactNode}){return <View style={styles.card}>{children}</View>}
