@@ -264,7 +264,7 @@ const calendarStyles = StyleSheet.create({
  dayHit: { alignSelf: 'flex-start' },
  dayBadge: { minWidth: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
  todayBadge: { backgroundColor: colors.harbor },
- selectedBadge: { backgroundColor: colors.ink },
+ selectedBadge: { backgroundColor: colors.harbor },
  dayNum: { fontSize: 12, fontWeight: '700', color: colors.ink },
  dayNumOnColor: { color: colors.onAccent },
  outsideText: { color: colors.muted },

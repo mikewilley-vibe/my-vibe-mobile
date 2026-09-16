@@ -31,24 +31,28 @@ export default function MyCalendar() {
 
  return (
   <Page refreshing={refreshing} onRefresh={refresh}>
-   <Text style={styles.eyebrow}>FAMILY CALENDAR</Text>
-   <Text style={styles.title}>What's going on with the family?</Text>
-   <Text style={styles.body}>Family Google calendar first. My Vibe plans, UVA, shows, and other sources sit on the same screen — add, edit, and manage from the grid below.</Text>
-   <Button title="+ Create a plan" onPress={() => router.push('/plan')} />
-   {!!resolvedEmbed && (
-    <View style={styles.row}>
-     <Pressable accessibilityRole="button" accessibilityState={{ selected: view === 'month' }} onPress={() => setView('month')} style={[styles.button, view !== 'month' && { backgroundColor: colors.fog }]}>
-      <Text style={[styles.buttonText, view !== 'month' && { color: colors.ink }]}>Month</Text>
-     </Pressable>
-     <Pressable accessibilityRole="button" accessibilityState={{ selected: view === 'agenda' }} onPress={() => setView('agenda')} style={[styles.button, view !== 'agenda' && { backgroundColor: colors.fog }]}>
-      <Text style={[styles.buttonText, view !== 'agenda' && { color: colors.ink }]}>Agenda</Text>
-     </Pressable>
+   <View style={styles.chrome}>
+    <View style={styles.intro}>
+     <Text style={styles.eyebrow}>FAMILY CALENDAR</Text>
+     <Text style={styles.title}>What's going on with the family?</Text>
+     <Text style={styles.lede}>Family Google calendar first. My Vibe plans, UVA, shows, and other sources sit on the same screen — add, edit, and manage from the grid below.</Text>
     </View>
-   )}
+    <Button title="+ Create a plan" onPress={() => router.push('/plan')} />
+    {!!resolvedEmbed && (
+     <View style={styles.row}>
+      <Pressable accessibilityRole="button" accessibilityState={{ selected: view === 'month' }} onPress={() => setView('month')} style={[styles.segment, view === 'month' && styles.segmentSelected]}>
+       <Text style={[styles.segmentText, view === 'month' && styles.segmentTextSelected]}>Month</Text>
+      </Pressable>
+      <Pressable accessibilityRole="button" accessibilityState={{ selected: view === 'agenda' }} onPress={() => setView('agenda')} style={[styles.segment, view === 'agenda' && styles.segmentSelected]}>
+       <Text style={[styles.segmentText, view === 'agenda' && styles.segmentTextSelected]}>Agenda</Text>
+      </Pressable>
+     </View>
+    )}
+   </View>
    {src ? (
     <Card>
      <Text style={styles.heading}>{view === 'month' ? 'Family month' : 'Family agenda'}</Text>
-     <Text style={styles.body}>{view === 'month' ? 'Same month look as mikewilley.app — the public family calendar.' : 'Quick list of upcoming family Google calendar events.'}</Text>
+     <Text style={styles.lede}>{view === 'month' ? 'Same month look as mikewilley.app — the public family calendar.' : 'Quick list of upcoming family Google calendar events.'}</Text>
      <View style={{ height: 720, marginHorizontal: -20, marginBottom: -20, overflow: 'hidden', borderBottomLeftRadius: 20, borderBottomRightRadius: 20, borderTopWidth: 1, borderColor: colors.fog, backgroundColor: colors.surface }}>
       <FamilyEmbed src={src} reloadKey={embedNonce} label={view === 'month' ? 'Google Calendar month' : 'Google Calendar agenda'} />
      </View>

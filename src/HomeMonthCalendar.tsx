@@ -241,7 +241,7 @@ const homeStyles = StyleSheet.create({
  sources: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
  sourceChip: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1 },
  sourceOn: { backgroundColor: colors.surface, borderColor: colors.harbor },
- sourceOff: { backgroundColor: colors.fog, borderColor: colors.fog },
+ sourceOff: { backgroundColor: colors.wash, borderColor: colors.wash },
  sourceText: { fontSize: 12, fontWeight: '700', color: colors.harbor },
  sourceTextOff: { color: colors.muted },
 });
