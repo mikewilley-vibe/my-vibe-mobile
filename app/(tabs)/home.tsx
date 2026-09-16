@@ -1,6 +1,6 @@
 import { HomeMonthCalendar } from '../../src/HomeMonthCalendar';
 
-/** Hidden tab route. The month grid now lives on Calendar; this module stays importable. */
+/** Hidden tab route. Kept as an importable module; not shown in the tab bar. */
 export default function Home() {
  return <HomeMonthCalendar />;
 }

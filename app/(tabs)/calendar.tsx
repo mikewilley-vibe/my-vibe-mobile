@@ -3,7 +3,6 @@ import { ActivityIndicator, Platform, Pressable, Text, View } from 'react-native
 import { router } from 'expo-router';
 import { WebView } from 'react-native-webview';
 import { agendaEmbedUrl, GOOGLE_CALENDAR_SETUP_HINT, monthEmbedUrl, resolveGoogleCalendarEmbedUrl } from '../../src/calendarDetect';
-import { HomeMonthCalendar } from '../../src/HomeMonthCalendar';
 import { Page, Card, Button, styles, colors } from '../../src/ui';
 
 const resolvedEmbed = resolveGoogleCalendarEmbedUrl(process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_EMBED_URL);
@@ -35,7 +34,7 @@ export default function MyCalendar() {
     <View style={styles.intro}>
      <Text style={styles.eyebrow}>FAMILY CALENDAR</Text>
      <Text style={styles.title}>What's going on with the family?</Text>
-     <Text style={styles.lede}>Family Google calendar first. My Vibe plans, UVA, shows, and other sources sit on the same screen — add, edit, and manage from the grid below.</Text>
+     <Text style={styles.lede}>This is the family Google calendar. Create a plan to add something, or switch Month and Agenda.</Text>
     </View>
     <Button title="+ Create a plan" onPress={() => router.push('/plan')} />
     {!!resolvedEmbed && (
@@ -62,7 +61,6 @@ export default function MyCalendar() {
      <Text style={styles.body}>{GOOGLE_CALENDAR_SETUP_HINT}</Text>
     </Card>
    )}
-   <HomeMonthCalendar embedded refreshKey={embedNonce} />
   </Page>
  );
 }

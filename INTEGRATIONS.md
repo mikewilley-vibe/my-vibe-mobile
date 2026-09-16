@@ -11,7 +11,7 @@ My Vibe is the personal hub. Sibling apps stay independent. This file is the con
 | ShowSignal | Shows tab; saved concerts on the month grid as source `showsignal` | Existing `POST /api/v1/ticketmaster/events` |
 | UVA Sports | UVA tab (unchanged schedule/results) **and** Calendar month grid | Existing `GET /api/uva/football` and `GET /api/uva` on `EXPO_PUBLIC_API_BASE_URL` |
 
-Launch opens **Calendar**. Family Google Calendar is the first section; the native multi-source month grid (formerly the Home hero) is reused below it from `src/HomeMonthCalendar.tsx`. Apps and projects live on **My Projects**. The Home route is hidden from the tab bar but kept as an importable module.
+Launch opens **Calendar**. That tab shows the family Google Calendar (Month/Agenda embed). Apps and projects live on **My Projects**. The Home route is hidden from the tab bar but kept as an importable module (`src/HomeMonthCalendar.tsx`).
 
 ## Calendar sources
 
@@ -105,4 +105,4 @@ npm run check    # tsc --noEmit && unit tests
 
 There is no lint script in this package.
 
-Manual: Calendar lands first with Family embed on top and the native month grid below; the grid still pages months and shows saved plans; Google events still appear when Calendar permission is granted; UVA games overlay with source “UVA Sports”; tapping a game shows known details only; My Projects tab lists catalog cards from `src/projects.ts`; HapsHere stays URL-needed unless env is set.
+Manual: Calendar lands first with the Family Month/Agenda embed; Google events still appear in that embed; UVA games remain on the UVA tab; My Projects tab lists catalog cards from `src/projects.ts`; HapsHere stays URL-needed unless env is set.

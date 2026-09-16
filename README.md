@@ -25,9 +25,9 @@ Xcode is installed on this Mac. This Codex session could not connect to CoreSimu
 
 ## First useful screens
 
-Cold start opens **Calendar**. My Projects, Shows, and UVA stay in the tab bar. Home is hidden from the tab bar; its month grid is reused on Calendar.
+Cold start opens **Calendar**. My Projects, Shows, and UVA stay in the tab bar. Home is hidden from the tab bar.
 
-- **Calendar:** Family Google calendar first (**Month** embed, same look as mikewilley.app; **Agenda** is a secondary toggle). Below that, the native multi-source month grid of My Vibe plans, Google events, saved ShowSignal shows, and UVA sports. Compact source chips under the grid toggle visibility. **+ Create a plan** still adds to My Vibe and can export to the family Google calendar.
+- **Calendar:** Family Google calendar (**Month** embed, same look as mikewilley.app; **Agenda** is a secondary toggle). **+ Create a plan** still adds to My Vibe and can export to the family Google calendar.
 - **My Projects:** reusable portfolio cards from `src/projects.ts`. Add a project there (`name`, `description`, `type`, `status`, and public links only when known). See `INTEGRATIONS.md` for deferred URLs/APIs.
 - **UVA:** native football and men's basketball upcoming games and recent W/L results from the existing `/api/uva/football` and `/api/uva` feeds (next up, next five per sport, recent results, HOME/AWAY). The same feeds overlay onto Calendar. Add an upcoming game to My Vibe from a game card.
 - **Shows:** real upcoming concerts from ShowSignal’s production Ticketmaster API; Hampton Roads, Richmond, and DC filters; original venue list; ticket links; save a show as a plan; **Open in ShowSignal** opens that concert in the ShowSignal app (`showsignal://concert/{id}`), or the ShowSignal website if the app isn’t installed.
