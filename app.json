@@ -7,7 +7,7 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "app.mikewilley.myvibemobile",
       "infoPlist": {
         "NSCalendarsFullAccessUsageDescription": "My Vibe can show Google calendar events on this device and adds only the plans you choose.",
