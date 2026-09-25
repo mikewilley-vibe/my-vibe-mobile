@@ -9,7 +9,7 @@ My Vibe is the personal hub. Sibling apps stay independent. This file is the con
 | Personal / My Vibe | Calendar month grid | Saved plans on this device (`src/store.ts`) |
 | Google Calendar | Calendar Family embed + native month grid | Device calendars via `expo-calendar`; family embed via `EXPO_PUBLIC_GOOGLE_CALENDAR_EMBED_URL` |
 | ShowSignal | Shows tab; saved concerts on the month grid as source `showsignal` | Existing `POST /api/v1/ticketmaster/events` |
-| UVA Sports | UVA tab (unchanged schedule/results) **and** Calendar month grid | Existing `GET /api/uva/football` and `GET /api/uva` on `EXPO_PUBLIC_API_BASE_URL` |
+| UVA Sports | UVA tab (full 2026 football season, plus men's basketball schedule/results) **and** Calendar month grid | Existing `GET /api/uva/football` and `GET /api/uva` on `EXPO_PUBLIC_API_BASE_URL`, merged with `src/uvaFootball2026.ts` |
 
 Launch opens **Calendar**. That tab shows the family Google Calendar (Month/Agenda embed). Apps and projects live on **My Projects**. The Home route is hidden from the tab bar but kept as an importable module (`src/HomeMonthCalendar.tsx`).
 
@@ -25,7 +25,7 @@ HapsHere is reserved as a later calendar source. It is an app link today, not a 
 
 ## UVA sports on the month calendar
 
-Reuse the existing mikewilley.app feeds. Do not hard-code a season in UI components.
+Reuse the existing mikewilley.app feeds. Do not hard-code a season in UI components. The 2026 football regular season baseline lives in `src/uvaFootball2026.ts` and is merged in `getUvaSchedule`. A live football payload is applied only when it is not marked `fallback` and has no feed error. Otherwise, or when the request fails, the bundled 12-game season is what the UVA tab and calendar use. Live games outside August 2026–January 2027 are not mixed into that season. Men's basketball is unchanged: next five upcoming games and recent results.
 
 Catalog: `src/uvaSports.ts` (`UVA_SPORT_CATALOG`).
 

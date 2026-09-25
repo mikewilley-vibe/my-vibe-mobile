@@ -1,6 +1,6 @@
 import type { Concert } from './reused/concert';
 import { concertsFromShowSignalEvents,eventsFromShowSignalBody,showSignalErrorMessage } from './showsignal';
-import { parseUvaGames, type UvaGame } from './uva';
+import { mergeFootballSchedule, parseUvaGames, uvaPayloadIsLive, type UvaGame } from './uva';
 import { enabledUvaSports, type UvaSportId } from './uvaSports.ts';
 export const BASE=(process.env.EXPO_PUBLIC_API_BASE_URL || 'https://www.mikewilley.app').replace(/\/$/,'');
 export const SHOWSIGNAL_API_BASE=(process.env.EXPO_PUBLIC_SHOWSIGNAL_API_BASE_URL || 'https://concert-finder-eta.vercel.app').replace(/\/$/,'');
@@ -32,26 +32,31 @@ export async function getConcerts(region:'Richmond'|'Hampton Roads'|'Washington 
  return concertsFromShowSignalEvents(events);
 }
 
-async function getUvaFeed(path:string):Promise<UvaGame[]> {
+async function getUvaFeed(path:string):Promise<{games:UvaGame[];live:boolean}> {
  const response=await fetch(`${BASE}${path}`,{signal:AbortSignal.timeout(20000)});
  if(!response.ok) throw new Error('UVA schedule could not load. Try again in a moment.');
  const body=await response.json();
  if(body && body.ok===false) throw new Error(typeof body.error==='string'&&body.error?body.error:'The UVA schedule is unavailable.');
- return parseUvaGames(body);
+ return {games:parseUvaGames(body),live:uvaPayloadIsLive(body)};
 }
 
 export async function getUvaSchedule(options?:{force?:boolean}):Promise<UvaSchedule> {
  if(!options?.force && uvaCache && Date.now()-uvaCache.at<UVA_CACHE_MS) return uvaCache.value;
  const sports=enabledUvaSports();
  const results=await Promise.allSettled(sports.map(sport=>getUvaFeed(sport.feedPath)));
- if(results.every(result=>result.status==='rejected')) throw new Error('UVA schedule could not load. Try again in a moment.');
  const bySport:Partial<Record<UvaSportId,UvaGame[]>>={};
  sports.forEach((sport,index)=>{
   const result=results[index];
-  bySport[sport.id]=result.status==='fulfilled'?result.value:[];
+  if(sport.id==='football'){
+   const live=result.status==='fulfilled'?result.value.games:[];
+   const trustLive=result.status==='fulfilled'&&result.value.live;
+   bySport.football=mergeFootballSchedule(live,{trustLive});
+   return;
+  }
+  bySport[sport.id]=result.status==='fulfilled'?result.value.games:[];
  });
  const value:UvaSchedule={
-  football:bySport.football??[],
+  football:bySport.football??mergeFootballSchedule([]),
   basketball:bySport['mens-basketball']??[],
   bySport,
   refreshedAt:new Date().toISOString(),
