@@ -15,6 +15,6 @@ Adapted into native components:
 
 Reused without changing the server:
 - ShowSignal `POST /api/v1/ticketmaster/events` (production `https://concert-finder-eta.vercel.app`), mapped to the existing Concert type.
-- `/api/uva` (basketball) and `/api/uva/football` schedule endpoints on mikewilley.app. The native UVA tab shows the next five upcoming games per sport and recent results from the same payloads (the web `/uva/.../results` pages are not required).
+- `/api/uva` (basketball) and `/api/uva/football` schedule endpoints on mikewilley.app. Football merges that feed with the bundled 2026 regular season in `src/uvaFootball2026.ts`, so a partial or failed live response still lists every game. Men's basketball still shows the next five upcoming games and recent results (the web `/uva/.../results` pages are not required).
 
 No server secret or Supabase service role credential is bundled.

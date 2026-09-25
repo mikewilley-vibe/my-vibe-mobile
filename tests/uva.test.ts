@@ -137,7 +137,7 @@ test('unknown kickoffs omit a clock time',()=>{
 test('location chips match the web HOME/AWAY labels',()=>{
  assert.equal(locationLabel('home'),'HOME');
  assert.equal(locationLabel('away'),'AWAY');
- assert.equal(locationLabel('neutral'),'');
+ assert.equal(locationLabel('neutral'),'NEUTRAL');
 });
 
 test('result chips are short beginner-friendly labels',()=>{
