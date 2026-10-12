@@ -1,9 +1,11 @@
-import { createElement, useState } from 'react';
+import { createElement, useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { WebView } from 'react-native-webview';
 import { agendaEmbedUrl, GOOGLE_CALENDAR_SETUP_HINT, monthEmbedUrl, resolveGoogleCalendarEmbedUrl } from '../../src/calendarDetect';
-import { Page, Card, Button, styles, colors } from '../../src/ui';
+import { getFamilyCalendarLinks } from '../../src/api';
+import { familyCalendarLinks, type FamilyCalendarLink } from '../../src/familyCalendars';
+import { Page, Card, Button, styles, colors, openLink } from '../../src/ui';
 
 const resolvedEmbed = resolveGoogleCalendarEmbedUrl(process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_EMBED_URL);
 const monthSrc = resolvedEmbed ? monthEmbedUrl(resolvedEmbed) : null;
@@ -20,7 +22,14 @@ export default function MyCalendar() {
  const [view, setView] = useState<'month' | 'agenda'>('month');
  const [refreshing, setRefreshing] = useState(false);
  const [embedNonce, setEmbedNonce] = useState(0);
+ const [links, setLinks] = useState<FamilyCalendarLink[]>(() => familyCalendarLinks());
  const src = view === 'month' ? monthSrc : agendaSrc;
+
+ useEffect(() => {
+  let active = true;
+  getFamilyCalendarLinks().then(next => { if (active) setLinks(next); });
+  return () => { active = false; };
+ }, [embedNonce]);
 
  function refresh() {
   setRefreshing(true);
@@ -61,6 +70,16 @@ export default function MyCalendar() {
      <Text style={styles.body}>{GOOGLE_CALENDAR_SETUP_HINT}</Text>
     </Card>
    )}
+   <Card>
+    <Text style={styles.heading}>School calendars and holidays</Text>
+    <Text style={styles.lede}>Official calendars for the current school year, plus the federal and Virginia holiday lists.</Text>
+    {links.map(link => (
+     <Pressable key={link.id} accessibilityRole="link" onPress={() => void openLink(link.href)} style={{ paddingVertical: 8 }}>
+      <Text style={[styles.heading, { color: colors.harbor }]}>{link.label} ↗</Text>
+      <Text style={styles.lede}>{link.detail}</Text>
+     </Pressable>
+    ))}
+   </Card>
   </Page>
  );
 }

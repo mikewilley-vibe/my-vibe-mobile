@@ -1,5 +1,6 @@
 import type { Concert } from './reused/concert';
 import { concertsFromShowSignalEvents,eventsFromShowSignalBody,showSignalErrorMessage } from './showsignal';
+import { familyCalendarLinks, parseFamilyCalendarLinks, type FamilyCalendarLink } from './familyCalendars';
 import { mergeFootballSchedule, parseUvaGames, uvaPayloadIsLive, type UvaGame } from './uva';
 import { enabledUvaSports, type UvaSportId } from './uvaSports.ts';
 export const BASE=(process.env.EXPO_PUBLIC_API_BASE_URL || 'https://www.mikewilley.app').replace(/\/$/,'');
@@ -63,4 +64,15 @@ export async function getUvaSchedule(options?:{force?:boolean}):Promise<UvaSched
  };
  uvaCache={at:Date.now(),value};
  return value;
+}
+
+export async function getFamilyCalendarLinks(): Promise<FamilyCalendarLink[]> {
+ const fallback=familyCalendarLinks();
+ try {
+  const response=await fetch(`${BASE}/api/family-calendars`,{signal:AbortSignal.timeout(8000)});
+  if(!response.ok) return fallback;
+  return parseFamilyCalendarLinks(await response.json()) ?? fallback;
+ } catch {
+  return fallback;
+ }
 }

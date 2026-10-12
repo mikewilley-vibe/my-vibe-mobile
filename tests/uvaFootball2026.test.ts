@@ -42,9 +42,12 @@ test('played games have a final score and unplayed games do not', () => {
     ['NC State', 'win', '34-8', true],
     ['Norfolk State', 'win', '59-3', true],
     ['West Virginia', 'loss', '27-38', true],
+    ['Delaware', 'win', '42-3', true],
+    ['Florida State', 'loss', '7-38', true],
+    ['Syracuse', 'win', '28-25', true],
   ]);
   const unplayed = UVA_FOOTBALL_2026.filter(game => !game.result);
-  assert.equal(unplayed.length, 9);
+  assert.equal(unplayed.length, 6);
   assert.ok(unplayed.every(game => game.score === undefined && !showsFinalScore(game)));
 });
 
@@ -60,19 +63,23 @@ test('announced kickoffs and TV match the official schedule, and the rest stay T
   assert.equal(byOpponent.Delaware.date, '2026-09-26T22:00:00.000Z');
   assert.equal(byOpponent.Delaware.network, 'ACCN');
   assert.equal(byOpponent.Delaware.location, 'home');
-  assert.equal(byOpponent['Florida State'].date, '2026-10-03T19:30:00.000Z');
+  assert.equal(byOpponent['Florida State'].network, 'ESPN2');
   assert.equal(byOpponent['Florida State'].location, 'away');
-  assert.equal(byOpponent['Florida State'].network, 'ESPN2 or ACCN');
+  assert.equal(byOpponent.Syracuse.date, '2026-10-10T23:30:00.000Z');
+  assert.equal(byOpponent.Syracuse.result, 'win');
+  assert.equal(byOpponent.SMU.date, '2026-10-17T16:00:00.000Z');
+  assert.equal(byOpponent.SMU.network, 'CW');
+  assert.equal(byOpponent.SMU.timeUnknown, undefined);
   assert.equal(byOpponent.Duke.date, '2026-10-23T23:00:00.000Z');
   assert.equal(byOpponent.Duke.network, 'ESPN');
-  for (const name of ['Syracuse', 'SMU', 'Wake Forest', 'Cal', 'North Carolina', 'Virginia Tech']) {
+  for (const name of ['Wake Forest', 'Cal', 'North Carolina', 'Virginia Tech']) {
     assert.equal(byOpponent[name].timeUnknown, true, name);
     assert.equal(byOpponent[name].network, undefined, name);
     assert.match(footballBroadcastLine(byOpponent[name]), /Kickoff TBA/);
     assert.match(footballBroadcastLine(byOpponent[name]), /TV TBA/);
   }
   assert.equal(footballBroadcastLine(byOpponent.Delaware), 'TV: ACCN');
-  assert.equal(nextSeasonGameId([...UVA_FOOTBALL_2026]), 'uva-fb-2026-udel');
+  assert.equal(nextSeasonGameId([...UVA_FOOTBALL_2026]), 'uva-fb-2026-smu');
 });
 
 test('NC State is not North Carolina, and Virginia Tech is not West Virginia', () => {
@@ -164,4 +171,26 @@ test('parseUvaGames keeps a final score and drops a pending score', () => {
   assert.equal(games[1].result, 'pending');
   assert.equal(games[1].score, undefined);
   assert.equal(games[2].score, '21-14');
+});
+
+test('postponed and canceled games do not show a final score', () => {
+  const parsed = parseUvaGames({
+    ok: true,
+    games: [
+      { id: 'uva-fb-2026-smu', opponent: 'SMU', date: '2026-10-24T20:00:00.000Z', location: 'away', status: 'postponed', score: '0-0', result: 'pending', timeUnknown: true },
+      { id: 'uva-fb-2026-duke', opponent: 'Duke', date: '2026-10-23T23:00:00.000Z', location: 'home', status: 'canceled', score: '10-10', result: 'win' },
+    ],
+  });
+  const games = mergeFootballSchedule(parsed, { trustLive: true });
+  const smu = games.find(game => game.opponent === 'SMU');
+  const duke = games.find(game => game.opponent === 'Duke');
+  assert.equal(smu?.status, 'postponed');
+  assert.equal(smu?.score, undefined);
+  assert.equal(smu?.date, '2026-10-24T20:00:00.000Z');
+  assert.equal(showsFinalScore(smu!), false);
+  assert.equal(footballBroadcastLine(smu!), 'Postponed');
+  assert.equal(duke?.status, 'canceled');
+  assert.equal(duke?.score, undefined);
+  assert.equal(showsFinalScore(duke!), false);
+  assert.equal(nextSeasonGameId(games), smu?.id);
 });

@@ -59,7 +59,7 @@ Expected feed item (already used by the UVA tab, with optional extras):
 }
 ```
 
-Pull-to-refresh on the UVA tab busts a 5-minute in-memory cache so Calendar and UVA stay on one schedule.
+Pull-to-refresh on the UVA tab re-reads the schedule. The mikewilley.app API stores the last successful ESPN refresh. A Vercel cron (`/api/cron/monday`, Mondays 13:00 UTC) updates that store without anyone opening the app. If a Monday refresh fails, the API keeps the previous snapshot. Postponed and canceled games stay on the list without a final score. Upcoming kickoffs are labeled in Eastern Time.
 
 ## SweatShift (not live)
 

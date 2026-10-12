@@ -3,15 +3,11 @@ import type { UvaGame } from './uva.ts';
 /**
  * Full 2026 Virginia football regular season.
  *
- * Verified 2026-09-25 against the official schedule:
+ * Verified 2026-10-12 against ESPN's Virginia schedule (team 258), which matches
+ * the official scores and kickoffs published by Virginia athletics:
  * https://virginiasports.com/sports/football/schedule
- * Kickoff times and TV also checked against Virginia's Sept. 26, 2026 game notes:
- * https://static.virginiasports.com/custompages/sports/m-footbl/gamenotes/2026/092626-DELGameNotes.pdf
- * Final scores for the three played games match that schedule page (W 34-8, W 59-3, L 27-38)
- * and the season stats PDF (120 points for, 49 against):
- * https://static.virginiasports.com/custompages/sports/m-footbl/stats/2026-2027/seasonstats.pdf
- *
- * Dates are America/New_York. A midnight Eastern timestamp means the kickoff is still TBA.
+ * Played games: W 34-8, W 59-3, L 27-38, W 42-3, L 7-38, W 28-25.
+ * A midnight Eastern timestamp means the kickoff is still TBA.
  * Score strings are UVA points, then the opponent.
  */
 export const UVA_FOOTBALL_2026_SOURCE = 'https://virginiasports.com/sports/football/schedule';
@@ -60,6 +56,9 @@ export const UVA_FOOTBALL_2026: readonly UvaGame[] = [
     opponent: 'Delaware',
     date: '2026-09-26T22:00:00.000Z',
     location: 'home',
+    result: 'win',
+    score: '42-3',
+    status: 'final',
     network: 'ACCN',
     venue: 'Scott Stadium',
     sport: 'football',
@@ -70,30 +69,36 @@ export const UVA_FOOTBALL_2026: readonly UvaGame[] = [
     opponent: 'Florida State',
     date: '2026-10-03T19:30:00.000Z',
     location: 'away',
-    network: 'ESPN2 or ACCN',
-    venue: 'Tallahassee, Fla.',
+    result: 'loss',
+    score: '7-38',
+    status: 'final',
+    network: 'ESPN2',
+    venue: 'Doak Campbell Stadium',
     sport: 'football',
     sourceUrl: SOURCE,
   },
   {
     id: 'uva-fb-2026-syr',
     opponent: 'Syracuse',
-    date: '2026-10-10T04:00:00.000Z',
+    date: '2026-10-10T23:30:00.000Z',
     location: 'home',
+    result: 'win',
+    score: '28-25',
+    status: 'final',
+    network: 'ACCN',
     venue: 'Scott Stadium',
     sport: 'football',
     sourceUrl: SOURCE,
-    timeUnknown: true,
   },
   {
     id: 'uva-fb-2026-smu',
     opponent: 'SMU',
-    date: '2026-10-17T04:00:00.000Z',
+    date: '2026-10-17T16:00:00.000Z',
     location: 'away',
-    venue: 'Dallas, Texas',
+    network: 'CW',
+    venue: 'Gerald J. Ford Stadium',
     sport: 'football',
     sourceUrl: SOURCE,
-    timeUnknown: true,
   },
   {
     id: 'uva-fb-2026-duke',

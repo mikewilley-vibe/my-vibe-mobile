@@ -16,6 +16,9 @@ export type UvaGame = {
   venue?: string;
   network?: string;
   timeUnknown?: boolean;
+  status?: 'scheduled' | 'in_progress' | 'final' | 'postponed' | 'canceled';
+  /** IANA zone for kickoff. Upcoming games are labeled in this zone. */
+  timeZone?: string;
   /** True when the feed named home, away, or neutral. Missing locations stay neutral and are not treated as a site change. */
   locationKnown?: boolean;
 };
@@ -58,8 +61,9 @@ export function parseUvaGames(body: unknown): UvaGame[] {
     const locationKnown = loc === 'home' || loc === 'away' || loc === 'neutral';
     const location: UvaLocation = loc === 'home' || loc === 'away' ? loc : 'neutral';
     const opponent = g.opponent.replace(/^vs\.?\s+/i, '').replace(/^at\s+/i, '').trim() || 'Opponent TBA';
-    const result = normalizeUvaResult(g.result);
-    const score = result === 'pending' ? undefined : parseUvaScore(g);
+    const status = parseUvaStatus(g.status, g.result);
+    const result = status === 'postponed' || status === 'canceled' ? undefined : normalizeUvaResult(g.result);
+    const score = status === 'final' || (!status && isDecisiveResult(result)) ? parseUvaScore(g) : undefined;
     const rawDate = g.date.trim();
     const venue = optionalText(g.venue) ?? venueFromNote(typeof g.note === 'string' ? g.note : undefined);
     const network = optionalText(g.network) ?? optionalText(g.tv) ?? optionalText(g.broadcast);
@@ -73,6 +77,7 @@ export function parseUvaGames(body: unknown): UvaGame[] {
       location,
       ...(result ? {result} : {}),
       ...(score ? {score} : {}),
+      ...(status ? {status} : {}),
       ...(locationKnown ? {locationKnown: true} : {}),
       note: typeof g.note === 'string' && g.note.trim() ? g.note : undefined,
       sourceUrl: typeof g.sourceUrl === 'string' && g.sourceUrl.trim() ? g.sourceUrl : undefined,
@@ -80,9 +85,22 @@ export function parseUvaGames(body: unknown): UvaGame[] {
       ...(venue ? {venue} : {}),
       ...(network ? {network} : {}),
       ...(timeUnknown ? {timeUnknown: true} : {}),
+      timeZone: optionalText(g.timeZone) || 'America/New_York',
     });
   }
   return out;
+}
+
+export function parseUvaStatus(status: unknown, result: unknown): UvaGame['status'] | undefined {
+  const raw = String(status ?? result ?? '').trim().toLowerCase();
+  if (!raw) return undefined;
+  if (raw.includes('cancel')) return 'canceled';
+  if (raw.includes('postpon')) return 'postponed';
+  if (raw === 'final' || raw === 'completed' || raw === 'in_progress' || raw === 'scheduled') {
+    return raw === 'completed' ? 'final' : raw;
+  }
+  if (isDecisiveResult(normalizeUvaResult(result))) return 'final';
+  return undefined;
 }
 
 function byDateThenId(a: UvaGame, b: UvaGame, dir: 1 | -1) {
@@ -91,7 +109,7 @@ function byDateThenId(a: UvaGame, b: UvaGame, dir: 1 | -1) {
 
 export function upcomingGames(games: UvaGame[], now = Date.now(), limit = UPCOMING_LIMIT) {
   return games
-    .filter(g => Date.parse(g.date) > now)
+    .filter(g => Date.parse(g.date) > now && g.status !== 'canceled')
     .sort((a, b) => byDateThenId(a, b, 1))
     .slice(0, limit);
 }
@@ -111,16 +129,16 @@ export function nextUp(football: UvaGame[], basketball: UvaGame[], now = Date.no
   return candidates[0] ?? null;
 }
 
-export function formatUvaWhen(iso: string) {
+export function formatUvaWhen(iso: string, timeZone = 'America/New_York', timeUnknown = false) {
   const dt = new Date(iso);
   if (Number.isNaN(dt.getTime())) return 'TBD';
-  const withTime = hasKnownKickoff(iso);
+  const withTime = !timeUnknown && hasKnownKickoff(iso, timeZone);
   return dt.toLocaleString('en-US', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
-    ...(withTime ? { hour: 'numeric', minute: '2-digit' } : {}),
-    timeZone: 'America/New_York',
+    ...(withTime ? { hour: 'numeric', minute: '2-digit', timeZoneName: 'shortGeneric' as const } : {}),
+    timeZone,
   });
 }
 
@@ -167,12 +185,15 @@ export function uvaHeadline(game: UvaGame): string {
 
 export function showsFinalScore(game: UvaGame): boolean {
   if (!game.score || game.result === 'pending') return false;
+  if (game.status === 'postponed' || game.status === 'canceled' || game.status === 'scheduled' || game.status === 'in_progress') return false;
   return isDecisiveResult(game.result) || game.result === 'tie';
 }
 
 /** Kickoff is already in the date line when it is known. TBA kickoffs say so next to TV. */
 export function footballBroadcastLine(game: UvaGame): string {
-  const known = game.timeUnknown !== true && hasKnownKickoff(game.date);
+  if (game.status === 'canceled') return 'Canceled';
+  if (game.status === 'postponed') return 'Postponed';
+  const known = game.timeUnknown !== true && hasKnownKickoff(game.date, game.timeZone);
   const tv = game.network ? `TV: ${game.network}` : 'TV TBA';
   return known ? tv : `Kickoff TBA · ${tv}`;
 }
@@ -183,7 +204,7 @@ export function seasonGames(games: UvaGame[]): UvaGame[] {
 
 /** Earliest game that does not yet have a final W/L. */
 export function nextSeasonGameId(games: UvaGame[]): string | null {
-  return seasonGames(games).find(game => !isDecisiveResult(game.result))?.id ?? null;
+  return seasonGames(games).find(game => game.status !== 'canceled' && !isDecisiveResult(game.result))?.id ?? null;
 }
 
 function scoreText(value: unknown): string | undefined {
@@ -259,18 +280,32 @@ function applyLiveFootballGame(base: UvaGame, live: UvaGame) {
   if (live.network) base.network = live.network;
   if (live.sourceUrl) base.sourceUrl = live.sourceUrl;
   if (live.note) base.note = live.note;
-  const knownKickoff = live.timeUnknown !== true && hasKnownKickoff(live.date);
+  if (live.timeZone) base.timeZone = live.timeZone;
+  const knownKickoff = live.timeUnknown !== true && hasKnownKickoff(live.date, live.timeZone);
+  if (live.status === 'postponed' || live.status === 'canceled') {
+    base.status = live.status;
+    base.date = live.date;
+    delete base.result;
+    delete base.score;
+    if (live.timeUnknown || !knownKickoff) base.timeUnknown = true;
+    else delete base.timeUnknown;
+    return;
+  }
   if (knownKickoff) {
     base.date = live.date;
     delete base.timeUnknown;
+  } else if (live.timeUnknown) {
+    base.timeUnknown = true;
   }
+  if (live.status) base.status = live.status;
   if (isDecisiveResult(live.result)) {
     if (base.result !== live.result) delete base.score;
     base.result = live.result;
+    base.status = 'final';
     if (live.score) base.score = live.score;
     return;
   }
-  if (live.score && live.result !== 'pending') {
+  if (live.score && live.result !== 'pending' && live.status === 'final') {
     base.score = live.score;
     if (live.result) base.result = live.result;
   }

@@ -126,12 +126,18 @@ test('empty or all-past schedules have no next up',()=>{
 test('UVA game times render in Eastern time like the web page',()=>{
  assert.match(formatUvaWhen('2026-09-19T23:30:00.000Z'),/Sep 19/);
  assert.match(formatUvaWhen('2026-09-19T23:30:00.000Z'),/7:30/);
+ assert.match(formatUvaWhen('2026-10-17T16:00:00.000Z'),/12:00/);
+ assert.match(formatUvaWhen('2026-10-17T16:00:00.000Z'),/\bET\b/);
 });
 
-test('unknown kickoffs omit a clock time',()=>{
+test('unknown kickoffs omit a clock time and a time zone',()=>{
  const label=formatUvaWhen('2026-12-29T05:00:00.000Z');
  assert.match(label,/Dec 29/);
  assert.doesNotMatch(label,/\d:\d{2}/);
+ assert.doesNotMatch(label,/\bET\b/);
+ const flagged=formatUvaWhen('2026-10-31T16:00:00.000Z','America/New_York',true);
+ assert.match(flagged,/Oct 31/);
+ assert.doesNotMatch(flagged,/\bET\b/);
 });
 
 test('location chips match the web HOME/AWAY labels',()=>{
