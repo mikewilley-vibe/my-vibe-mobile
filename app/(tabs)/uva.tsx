@@ -10,6 +10,13 @@ function Chip({label,background,accessibilityLabel}:{label:string;background:str
  return <View accessible accessibilityLabel={accessibilityLabel||label} style={{backgroundColor:background,borderRadius:6,paddingHorizontal:8,paddingVertical:3}}><Text style={{color:'white',fontSize:11,fontWeight:'700'}}>{label}</Text></View>;
 }
 
+function statusChip(status?:string){
+ if(status==='postponed') return <Chip label="POSTPONED" background={colors.muted} accessibilityLabel="Postponed"/>;
+ if(status==='canceled') return <Chip label="CANCELED" background={colors.muted} accessibilityLabel="Canceled"/>;
+ if(status==='in_progress') return <Chip label="LIVE" background={colors.uvaOrange} accessibilityLabel="In progress"/>;
+ return null;
+}
+
 function resultChip(result?:string){
  const label=resultLabel(result);
  if(!label) return null;
@@ -18,33 +25,42 @@ function resultChip(result?:string){
  return <Chip label={label} background={background} accessibilityLabel={spoken}/>;
 }
 
+function whenLabel(game:UvaGame){
+ return formatUvaWhen(game.date, game.timeZone || 'America/New_York', game.timeUnknown === true);
+}
+
 function GameCard({game,next}:{game:UvaGame;next?:boolean}){
  const {plans}=useData();
  const loc=locationLabel(game.location);
  const planId='uva:'+game.id;
  const saved=plans.some(p=>p.id===planId);
+ const closed=game.status==='canceled';
  return <Card>
   <View style={styles.row}>
    {next?<Chip label="NEXT" background={colors.uvaOrange}/>:null}
-   <Text style={styles.eyebrow}>{formatUvaWhen(game.date)}</Text>
+   {statusChip(game.status)}
+   <Text style={styles.eyebrow}>{whenLabel(game)}</Text>
    {loc?<Chip label={loc} background={game.location==='home'?colors.uvaBlue:colors.uvaOrange}/>:null}
   </View>
   <Text style={[styles.heading,{color:colors.uvaBlue}]}>{uvaHeadline(game)}</Text>
   {!!game.note&&<Text style={styles.body}>{game.note}</Text>}
-  <Button title={saved?'View saved plan':'Add to My Vibe'} onPress={()=>router.push({pathname:'/plan',params:{id:planId,title:uvaHeadline(game),start:game.date,location:planLocation(game),url:game.sourceUrl}})}/>
+  {!closed&&<Button title={saved?'View saved plan':'Add to My Vibe'} onPress={()=>router.push({pathname:'/plan',params:{id:planId,title:uvaHeadline(game),start:game.date,location:planLocation(game),url:game.sourceUrl}})}/>}
   {!!game.sourceUrl&&<Button title="Game details ↗" onPress={()=>void openLink(game.sourceUrl!)}/>}
  </Card>;
 }
 
 function ResultCard({game}:{game:UvaGame}){
  const loc=locationLabel(game.location);
+ const score=showsFinalScore(game)?game.score:'';
  return <Card>
   <View style={styles.row}>
    {resultChip(game.result)}
-   <Text style={styles.eyebrow}>{formatUvaWhen(game.date)}</Text>
+   {statusChip(game.status)}
+   <Text style={styles.eyebrow}>{whenLabel(game)}</Text>
    {loc?<Chip label={loc} background={game.location==='home'?colors.uvaBlue:colors.uvaOrange}/>:null}
   </View>
   <Text style={[styles.heading,{color:colors.uvaBlue}]}>{uvaHeadline(game)}</Text>
+  {score?<Text style={[styles.heading,{color:colors.uvaBlue}]} accessibilityLabel={`Final score ${score}`}>{score}</Text>:null}
   {!!game.note&&<Text style={styles.body}>{game.note}</Text>}
  </Card>;
 }
@@ -55,19 +71,21 @@ function SeasonCard({game,next}:{game:UvaGame;next?:boolean}){
  const planId='uva:'+game.id;
  const saved=plans.some(p=>p.id===planId);
  const final=isDecisiveResult(game.result);
+ const closed=game.status==='canceled';
  const score=showsFinalScore(game)?game.score:'';
  return <Card>
   <View style={styles.row}>
    {next?<Chip label="NEXT" background={colors.uvaOrange}/>:null}
    {final?resultChip(game.result):null}
-   <Text style={styles.eyebrow}>{formatUvaWhen(game.date)}</Text>
+   {statusChip(game.status)}
+   <Text style={styles.eyebrow}>{whenLabel(game)}</Text>
    {loc?<Chip label={loc} background={game.location==='home'?colors.uvaBlue:colors.uvaOrange}/>:null}
   </View>
   <Text style={[styles.heading,{color:colors.uvaBlue}]}>{uvaHeadline(game)}</Text>
   {score?<Text style={[styles.heading,{color:colors.uvaBlue}]} accessibilityLabel={`Final score ${score}`}>{score}</Text>:null}
   <Text style={styles.body}>{footballBroadcastLine(game)}</Text>
   {!!game.note&&<Text style={styles.body}>{game.note}</Text>}
-  {!final&&<Button title={saved?'View saved plan':'Add to My Vibe'} onPress={()=>router.push({pathname:'/plan',params:{id:planId,title:uvaHeadline(game),start:game.date,location:planLocation(game),url:game.sourceUrl}})}/>}
+  {!final&&!closed&&<Button title={saved?'View saved plan':'Add to My Vibe'} onPress={()=>router.push({pathname:'/plan',params:{id:planId,title:uvaHeadline(game),start:game.date,location:planLocation(game),url:game.sourceUrl}})}/>}
   {!!game.sourceUrl&&<Button title="Game details ↗" onPress={()=>void openLink(game.sourceUrl!)}/>}
  </Card>;
 }
@@ -80,6 +98,7 @@ function FootballSeason({games}:{games:UvaGame[]}){
    <View style={{flex:1,gap:4}}>
     <Text style={[styles.eyebrow,{color:colors.uvaOrange}]}>FOOTBALL</Text>
     <Text style={[styles.heading,{color:colors.uvaBlue}]}>2026 season</Text>
+    <Text style={styles.body}>Kickoff times are Eastern Time (ET).</Text>
    </View>
    <Text style={styles.body}>{rows.length} games</Text>
   </View>
@@ -95,6 +114,7 @@ function SportSection({label,games}:{label:string;games:UvaGame[]}){
    <View style={{flex:1,gap:4}}>
     <Text style={[styles.eyebrow,{color:colors.uvaOrange}]}>{label.toUpperCase()}</Text>
     <Text style={[styles.heading,{color:colors.uvaBlue}]}>Next 5 games</Text>
+    <Text style={styles.body}>Times are Eastern Time (ET).</Text>
    </View>
    <Text style={styles.body}>{upcoming.length} shown</Text>
   </View>
