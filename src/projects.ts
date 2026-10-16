@@ -168,14 +168,6 @@ export const PROJECTS: Project[] = [
     icon: '🐕',
   },
   {
-    id: 'adale-martin',
-    name: 'Adale Martin website',
-    description: 'Personal website for Adale Martin.',
-    type: 'website',
-    status: 'in-development',
-    icon: '✦',
-  },
-  {
     id: 'orf-rock',
     name: 'Orf Rock',
     description: 'Orf Rock project.',

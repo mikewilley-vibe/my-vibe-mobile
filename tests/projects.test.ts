@@ -17,10 +17,11 @@ const KNOWN_WEB = /^https:\/\/concert-finder-eta\.vercel\.app$/;
 
 test('catalog includes the starter projects without inventing a Concert Finder product', () => {
  const ids = PROJECTS.map(project => project.id);
- for (const id of ['sweatshift', 'showsignal', 'hapshere', 'my-vibe', 'vibe-school', 'vandy-accounting', 'skoshie-shelties', 'adale-martin', 'orf-rock']) {
+ for (const id of ['sweatshift', 'showsignal', 'hapshere', 'my-vibe', 'vibe-school', 'vandy-accounting', 'skoshie-shelties', 'orf-rock']) {
   assert.ok(ids.includes(id), `missing ${id}`);
  }
  assert.equal(ids.includes('concert-finder'), false);
+ assert.equal(ids.includes('adale-martin'), false);
  const show = PROJECTS.find(project => project.id === 'showsignal');
  assert.match(show?.description || '', /formerly concert finder/i);
 });
